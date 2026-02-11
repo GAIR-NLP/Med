@@ -1,24 +1,31 @@
 repos:
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.12.0
     hooks:
-      - id: check-yaml
-      - id: end-of-file-fixer
-      - id: trailing-whitespace
-      - id: check-added-large-files
-        args: ['--maxkb=1000']
-      - id: check-merge-conflict
-
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.1.9
+      - id: isort
+        args:
+          - --profile=black
+  - repo: https://github.com/myint/autoflake
+    rev: v2.2.1
     hooks:
-      - id: ruff
-        args: [--fix, --exit-non-zero-on-fix]
-      - id: ruff-format
-
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.7.1
+      - id: autoflake
+        args:
+          - -r
+          - --exclude=__init__.py
+          - --in-place
+          - --remove-unused-variables
+          - --remove-all-unused-imports
+  - repo: https://github.com/python/black
+    rev: 23.9.1
     hooks:
-      - id: mypy
-        additional_dependencies: []
-        args: [--ignore-missing-imports, --no-strict-optional]
+      - id: black
+        args:
+          - --line-length=88
+          - --target-version=py311
+  - repo: https://github.com/pycqa/flake8
+    rev: 6.1.0
+    hooks:
+      - id: flake8
+        args:
+          - --ignore=E203,E501,W503,E128,W291
+          - --max-line-length=88

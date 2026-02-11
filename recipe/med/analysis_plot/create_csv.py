@@ -73,8 +73,8 @@ def load_benchmark_trajectories(
     """Load both single_turn and tool agent trajectories for a benchmark.
 
     Args:
-        benchmark_dir: Directory containing the benchmark data (e.g., .../global_step_XXX/charxiv2rq)
-        benchmark_name: Name of the benchmark (e.g., 'charxiv2rq')
+        benchmark_dir: Directory containing the benchmark data (e.g., .../global_step_XXX/vstar)
+        benchmark_name: Name of the benchmark (e.g., 'vstar')
 
     Returns:
         dict with keys 'wo_tool_trajectories' and 'w_tool_trajectories'
@@ -181,17 +181,27 @@ def analyze_trajectories(
     N_fail = len(wo_tool_incorrect_indices)  # |D_fail|
     N_succ = len(wo_tool_correct_indices)  # |D_succ|
 
-    term1_indices = wo_tool_incorrect_indices & w_tool_correct_indices & w_tool_call_indices
-    N_call_fail = len(wo_tool_incorrect_indices & w_tool_call_indices)  # |D_fail ∩ call|
+    term1_indices = (
+        wo_tool_incorrect_indices & w_tool_correct_indices & w_tool_call_indices
+    )
+    N_call_fail = len(
+        wo_tool_incorrect_indices & w_tool_call_indices
+    )  # |D_fail ∩ call|
     term1 = total and len(term1_indices) / total or 0.0
 
-    term2_indices = wo_tool_incorrect_indices & w_tool_correct_indices & w_tool_no_call_indices
+    term2_indices = (
+        wo_tool_incorrect_indices & w_tool_correct_indices & w_tool_no_call_indices
+    )
     term2 = total and len(term2_indices) / total or 0.0
 
-    term3_indices = wo_tool_correct_indices & w_tool_incorrect_indices & w_tool_call_indices
+    term3_indices = (
+        wo_tool_correct_indices & w_tool_incorrect_indices & w_tool_call_indices
+    )
     term3 = total and len(term3_indices) / total or 0.0
 
-    term4_indices = wo_tool_correct_indices & w_tool_incorrect_indices & w_tool_no_call_indices
+    term4_indices = (
+        wo_tool_correct_indices & w_tool_incorrect_indices & w_tool_no_call_indices
+    )
     term4 = total and len(term4_indices) / total or 0.0
 
     # Verify term1-4 decomposition (only for dynamic partition)
@@ -216,7 +226,9 @@ def analyze_trajectories(
     # Call probabilities in fail domain
     p_call_fail = N_fail and N_call_fail / N_fail or 0.0  # P(c | D_fail)
     p_nocall_fail = (
-        N_fail and len(wo_tool_incorrect_indices & w_tool_no_call_indices) / N_fail or 0.0
+        N_fail
+        and len(wo_tool_incorrect_indices & w_tool_no_call_indices) / N_fail
+        or 0.0
     )  # P(¬c | D_fail)
 
     # Call probabilities in succ domain
@@ -232,13 +244,17 @@ def analyze_trajectories(
 
     p_acc_call_fail = (
         N_call_fail
-        and len(wo_tool_incorrect_indices & w_tool_call_indices & w_tool_correct_indices)
+        and len(
+            wo_tool_incorrect_indices & w_tool_call_indices & w_tool_correct_indices
+        )
         / N_call_fail
         or 0.0
     )  # P(✓ | c, D_fail)
     p_acc_nocall_fail = (
         n_nocall_fail
-        and len(wo_tool_incorrect_indices & w_tool_no_call_indices & w_tool_correct_indices)
+        and len(
+            wo_tool_incorrect_indices & w_tool_no_call_indices & w_tool_correct_indices
+        )
         / n_nocall_fail
         or 0.0
     )  # P(✓ | ¬c, D_fail)
@@ -249,13 +265,17 @@ def analyze_trajectories(
 
     p_err_call_succ = (
         n_call_succ
-        and len(wo_tool_correct_indices & w_tool_call_indices & w_tool_incorrect_indices)
+        and len(
+            wo_tool_correct_indices & w_tool_call_indices & w_tool_incorrect_indices
+        )
         / n_call_succ
         or 0.0
     )  # P(× | c, D_succ)
     p_err_nocall_succ = (
         n_nocall_succ
-        and len(wo_tool_correct_indices & w_tool_no_call_indices & w_tool_incorrect_indices)
+        and len(
+            wo_tool_correct_indices & w_tool_no_call_indices & w_tool_incorrect_indices
+        )
         / n_nocall_succ
         or 0.0
     )  # P(× | ¬c, D_succ)
@@ -372,7 +392,9 @@ def process_single_benchmark(
         trajectories = load_benchmark_trajectories(root, bench_name)
 
         # Compute dynamic partition metrics (original behavior)
-        analysis_dynamic = analyze_trajectories(trajectories, baseline_correct_indices=None)
+        analysis_dynamic = analyze_trajectories(
+            trajectories, baseline_correct_indices=None
+        )
         analysis_dynamic.pop("wo_tool_accuracy")
         analysis_dynamic.pop("w_tool_accuracy")
 
@@ -416,10 +438,14 @@ def process_single_benchmark(
 
             # Compute intersections for BOTH D_succ and D_fail
             # D_succ_intersection = D_succ(0) ∩ D_succ(t) - persistently easy samples
-            intersection_correct_indices = step0_correct_indices & current_correct_indices
+            intersection_correct_indices = (
+                step0_correct_indices & current_correct_indices
+            )
 
             # D_fail_intersection = D_fail(0) ∩ D_fail(t) - persistently difficult samples
-            intersection_incorrect_indices = step0_incorrect_indices & current_incorrect_indices
+            intersection_incorrect_indices = (
+                step0_incorrect_indices & current_incorrect_indices
+            )
 
             # Analyze with intersection partition (both correct and incorrect provided)
             analysis_intersection = analyze_trajectories(
@@ -440,7 +466,9 @@ def process_single_benchmark(
         return None
 
 
-def load_experiment_step0_partition(evaluation_dir: str, exp_name: str) -> dict[str, set]:
+def load_experiment_step0_partition(
+    evaluation_dir: str, exp_name: str
+) -> dict[str, set]:
     """Load initial step partition from current experiment (FALLBACK method).
 
     NOTE: This is a fallback when no baseline model mapping exists in MODEL_BASELINE_MAPPING.
@@ -542,7 +570,9 @@ def load_experiment_step0_partition(evaluation_dir: str, exp_name: str) -> dict[
     return step0_indices
 
 
-def load_baseline_correct_indices(evaluation_dir: str, baseline_model_path: str) -> dict[str, set]:
+def load_baseline_correct_indices(
+    evaluation_dir: str, baseline_model_path: str
+) -> dict[str, set]:
     """Load baseline model's w/o tool correct indices for each benchmark.
 
     Args:
@@ -582,7 +612,9 @@ def load_baseline_correct_indices(evaluation_dir: str, baseline_model_path: str)
                         correct_indices.add(idx)
 
                 baseline_indices[bench_name] = correct_indices
-                print(f"  {bench_name}: {len(correct_indices)}/{len(wo_tool_trajs)} correct")
+                print(
+                    f"  {bench_name}: {len(correct_indices)}/{len(wo_tool_trajs)} correct"
+                )
 
             except Exception as e:
                 print(f"  Error loading baseline for {bench_name}: {e}")
@@ -607,7 +639,9 @@ def load_baseline_correct_indices(evaluation_dir: str, baseline_model_path: str)
                             correct_indices.add(idx)
 
                     baseline_indices[bench_name] = correct_indices
-                    print(f"  {bench_name}: {len(correct_indices)}/{len(wo_tool_trajs)} correct")
+                    print(
+                        f"  {bench_name}: {len(correct_indices)}/{len(wo_tool_trajs)} correct"
+                    )
 
                 except Exception as e:
                     print(f"  Error loading baseline for {bench_name}: {e}")
@@ -656,7 +690,9 @@ def find_evaluation_files(
             for root, step0_idx in eval_paths
         }
 
-        for future in tqdm(as_completed(futures), total=len(futures), desc="Loading benchmarks"):
+        for future in tqdm(
+            as_completed(futures), total=len(futures), desc="Loading benchmarks"
+        ):
             result = future.result()
             if result is not None:
                 results.append(result)
@@ -699,12 +735,18 @@ def create_csv_for_experiment(
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Create CSV files from evaluation results")
+    parser = argparse.ArgumentParser(
+        description="Create CSV files from evaluation results"
+    )
     parser.add_argument(
         "--evaluation_dir", type=str, required=True, help="Path to evaluation directory"
     )
     parser.add_argument(
-        "--exp_names", type=str, nargs="+", required=True, help="list of experiment names"
+        "--exp_names",
+        type=str,
+        nargs="+",
+        required=True,
+        help="list of experiment names",
     )
 
     args = parser.parse_args()
@@ -733,12 +775,16 @@ def main():
                 step0_map = baseline_cache[baseline_model_path]
             else:
                 # Load from baseline model
-                step0_map = load_baseline_correct_indices(args.evaluation_dir, baseline_model_path)
+                step0_map = load_baseline_correct_indices(
+                    args.evaluation_dir, baseline_model_path
+                )
                 if step0_map:
                     baseline_cache[baseline_model_path] = step0_map
                     print(f"Loaded baseline partition for {len(step0_map)} benchmarks")
                 else:
-                    print(f"Warning: Failed to load baseline from {baseline_model_path}")
+                    print(
+                        f"Warning: Failed to load baseline from {baseline_model_path}"
+                    )
 
         # If no baseline model found or failed to load, fallback to experiment's earliest step
         if not step0_map:

@@ -4,7 +4,6 @@ Plot paper figures for Vision Tool-Use RL experiments.
 Creates multi-experiment comparison figures with aggregated performance metrics.
 """
 
-# Import utility functions from calculate_and_plot_area.py
 import sys
 from pathlib import Path
 
@@ -14,9 +13,12 @@ import pandas as pd
 
 sys.path.append(str(Path(__file__).parent))
 
-from calculate_and_plot_area import (
+from utils import (
     get_sorted_benchmarks,
+    identify_model_from_exp_name,
+    load_baseline_performance,
     load_experiment_data,
+    merge_baseline_performance,
     smooth_curve,
 )
 
@@ -82,98 +84,8 @@ PAPER_FIG_CONFIG = {
 }
 
 
-def identify_model_from_exp_name(exp_name: str) -> str | None:
-    """Identify which model an experiment belongs to based on its name.
-
-    Args:
-        exp_name: Experiment name (e.g., "qwen25vl_instruct_50_25/...")
-
-    Returns:
-        Model identifier prefix (e.g., "qwen25vl_instruct") or None if not found
-    """
-    # Extract first part before any path separator
-    exp_base = exp_name.split("/")[0] if "/" in exp_name else exp_name
-
-    # Check which model prefix matches
-    for model_prefix in MODEL_BASELINE_MAPPING.keys():
-        if exp_base.startswith(model_prefix):
-            return model_prefix
-
-    print(f"Warning: Could not identify model for experiment '{exp_name}'")
-    return None
-
-
-def load_baseline_performance(model_path: str) -> pd.DataFrame | None:
-    """Load baseline performance for a given model.
-
-    Args:
-        model_path: Path to baseline model (e.g., "verl_model/Qwen2.5-VL-7B-Instruct")
-
-    Returns:
-        DataFrame with baseline performance or None if not found
-    """
-    baseline_dir = RESULTS_DIR / model_path
-
-    if not baseline_dir.exists():
-        print(f"Warning: Baseline directory not found: {baseline_dir}")
-        return None
-
-    # Look for the CSV file with pattern {model_name}_results.csv
-    model_name = Path(model_path).name
-    csv_file = baseline_dir / f"{model_name}_results.csv"
-
-    if not csv_file.exists():
-        print(f"Warning: Baseline CSV not found: {csv_file}")
-        return None
-
-    try:
-        df = pd.read_csv(csv_file)
-        print(f"Loaded baseline performance from: {csv_file}")
-        return df
-    except Exception as e:
-        print(f"Error loading baseline CSV {csv_file}: {e}")
-        return None
-
-
-def merge_baseline_performance(exp_df: pd.DataFrame, baseline_df: pd.DataFrame) -> pd.DataFrame:
-    """Merge baseline performance (step=0) into experiment DataFrame.
-
-    Inserts baseline performance as step=0 rows if they don't exist.
-
-    Args:
-        exp_df: Experiment DataFrame
-        baseline_df: Baseline performance DataFrame
-
-    Returns:
-        DataFrame with baseline rows inserted at step=0
-    """
-    exp_df = exp_df.copy()
-
-    # Get minimum step in baseline (should be 0 or close to it)
-    min_baseline_step = baseline_df["step"].min() if "step" in baseline_df.columns else 0
-
-    # Filter baseline to get only the earliest step
-    baseline_step0 = baseline_df[baseline_df["step"] == min_baseline_step].copy()
-
-    # Set step to 0 for baseline data
-    baseline_step0["step"] = 0
-
-    # Check if exp_df already has step=0 data
-    has_step0 = (exp_df["step"] == 0).any() if "step" in exp_df.columns else False
-
-    if has_step0:
-        print("  Warning: Experiment already has step=0 data, skipping baseline insertion")
-        return exp_df
-
-    # Concatenate baseline at the beginning
-    combined_df = pd.concat([baseline_step0, exp_df], ignore_index=True)
-
-    # Sort by step and benchmark
-    combined_df = combined_df.sort_values(["benchmark", "step"]).reset_index(drop=True)
-
-    print(f"  Added {len(baseline_step0)} baseline rows at step=0")
-
-    return combined_df
+# Use utility functions from utils.py for data loading
+# (identify_model_from_exp_name, load_baseline_performance, merge_baseline_performance)
 
 
 def load_experiment_with_baseline(exp_name: str) -> pd.DataFrame | None:
@@ -297,7 +209,10 @@ def aggregate_benchmarks(
         all_normalized_w_tool.append(w_tool_normalized)
         all_normalized_wo_tool.append(wo_tool_normalized)
 
-        if "call_num" in benchmark_data.columns and "w_tool_total" in benchmark_data.columns:
+        if (
+            "call_num" in benchmark_data.columns
+            and "w_tool_total" in benchmark_data.columns
+        ):
             call_num = benchmark_data["call_num"].values
             w_tool_total = benchmark_data["w_tool_total"].values
             call_rate = call_num / w_tool_total
@@ -313,7 +228,9 @@ def aggregate_benchmarks(
     aggregated_w_tool_raw = np.mean(all_normalized_w_tool, axis=0)
     aggregated_wo_tool_raw = np.mean(all_normalized_wo_tool, axis=0)
     aggregated_call_rate = (
-        np.mean(all_call_rates, axis=0) if len(all_call_rates) > 0 else np.zeros_like(common_steps)
+        np.mean(all_call_rates, axis=0)
+        if len(all_call_rates) > 0
+        else np.zeros_like(common_steps)
     )
 
     # Smooth the aggregated data for plotting
@@ -343,8 +260,8 @@ def plot_explain_figure(
     aggregated_benchmarks: list[str],
     smoothing_factor: float = 0.99,
     smoothing_method: str = "time_weighted_ema",
-    output_dir: str = "paper_figures",
-    output_filename: str = "term_absolute_values.pdf",
+    output_dir: str = "figures",
+    output_filename: str = "explain_figure.pdf",
     captions: list[str] | None = None,
 ):
     """Plot term1-4 ABSOLUTE values with side-by-side Gain/Harm stacks.
@@ -408,7 +325,9 @@ def plot_explain_figure(
         selected_benchmarks = get_sorted_benchmarks(df)
 
         # Filter selected benchmarks based on aggregated_benchmarks
-        target_benchmarks = [b for b in selected_benchmarks if b in aggregated_benchmarks]
+        target_benchmarks = [
+            b for b in selected_benchmarks if b in aggregated_benchmarks
+        ]
 
         if not target_benchmarks:
             print(f"No matching benchmarks found for {exp_name}")
@@ -435,7 +354,10 @@ def plot_explain_figure(
                 common_steps = steps.copy()
 
             # Check if term1-4 data exists
-            if all(col in benchmark_data.columns for col in ["term1", "term2", "term3", "term4"]):
+            if all(
+                col in benchmark_data.columns
+                for col in ["term1", "term2", "term3", "term4"]
+            ):
                 # Use raw values (no normalization) - preserve physical meaning
                 all_term1.append(benchmark_data["term1"].values)
                 all_term2.append(benchmark_data["term2"].values)
@@ -485,14 +407,20 @@ def plot_explain_figure(
 
             if aggregated_wo_tool_raw is not None:
                 aggregated_wo_tool = smooth_curve(
-                    aggregated_wo_tool_raw, common_steps, smoothing_factor, smoothing_method
+                    aggregated_wo_tool_raw,
+                    common_steps,
+                    smoothing_factor,
+                    smoothing_method,
                 )
             else:
                 aggregated_wo_tool = None
 
             if aggregated_w_tool_raw is not None:
                 aggregated_w_tool = smooth_curve(
-                    aggregated_w_tool_raw, common_steps, smoothing_factor, smoothing_method
+                    aggregated_w_tool_raw,
+                    common_steps,
+                    smoothing_factor,
+                    smoothing_method,
                 )
             else:
                 aggregated_w_tool = None
@@ -502,10 +430,14 @@ def plot_explain_figure(
             aggregated_term3 = aggregated_term3_raw.copy()
             aggregated_term4 = aggregated_term4_raw.copy()
             aggregated_wo_tool = (
-                aggregated_wo_tool_raw.copy() if aggregated_wo_tool_raw is not None else None
+                aggregated_wo_tool_raw.copy()
+                if aggregated_wo_tool_raw is not None
+                else None
             )
             aggregated_w_tool = (
-                aggregated_w_tool_raw.copy() if aggregated_w_tool_raw is not None else None
+                aggregated_w_tool_raw.copy()
+                if aggregated_w_tool_raw is not None
+                else None
             )
 
         # Get axis for this experiment
@@ -524,7 +456,9 @@ def plot_explain_figure(
             acc_gain = None
 
         # Bar width and positioning for side-by-side stacked bars
-        step_interval = (common_steps[1] - common_steps[0]) if len(common_steps) > 1 else 1.0
+        step_interval = (
+            (common_steps[1] - common_steps[0]) if len(common_steps) > 1 else 1.0
+        )
         bar_width = step_interval * 0.4  # Width of each stacked bar group
 
         # T1+T2: right edge aligns with checkpoint (center = checkpoint - bar_width/2)
@@ -658,16 +592,22 @@ def plot_explain_figure(
                 fontweight="bold",
                 pad=20,
             )
-        ax.set_xlabel("Steps", fontsize=PAPER_FIG_CONFIG["label_fontsize"], fontweight="medium")
+        ax.set_xlabel(
+            "Steps", fontsize=PAPER_FIG_CONFIG["label_fontsize"], fontweight="medium"
+        )
         ax.set_ylabel(
-            "Probability", fontsize=PAPER_FIG_CONFIG["label_fontsize"], fontweight="medium"
+            "Probability",
+            fontsize=PAPER_FIG_CONFIG["label_fontsize"],
+            fontweight="medium",
         )
 
         # Add a horizontal line at y=0
         ax.axhline(y=0, color="gray", linestyle="-", linewidth=1.5, alpha=0.5, zorder=1)
 
         ax.grid(
-            True, alpha=PAPER_FIG_CONFIG["grid_alpha"], linewidth=PAPER_FIG_CONFIG["grid_linewidth"]
+            True,
+            alpha=PAPER_FIG_CONFIG["grid_alpha"],
+            linewidth=PAPER_FIG_CONFIG["grid_linewidth"],
         )
         ax.set_axisbelow(True)
         ax.legend(loc="best", fontsize=9.5, frameon=True, fancybox=True, shadow=True)
@@ -699,7 +639,9 @@ def plot_explain_figure(
     import warnings
 
     with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", message=".*not compatible with tight_layout.*")
+        warnings.filterwarnings(
+            "ignore", message=".*not compatible with tight_layout.*"
+        )
         plt.tight_layout()
         plt.subplots_adjust(hspace=0.35)  # Adjust vertical spacing for row labels
 
@@ -728,7 +670,7 @@ def plot_diagnose_figure(
     smoothing_factor: float = 0.99,
     smoothing_method: str = "time_weighted_ema",
     output_dir: str = "figures",
-    output_filename: str = "term_factor_decomposition.pdf",
+    output_filename: str = "diagnose_figure.pdf",
     captions: list[str] | None = None,
 ):
     """Plot term1-4 factor decomposition with dual y-axes (Mass × Policy × Quality).
@@ -782,7 +724,9 @@ def plot_diagnose_figure(
         selected_benchmarks = get_sorted_benchmarks(df)
 
         # Filter selected benchmarks based on aggregated_benchmarks
-        target_benchmarks = [b for b in selected_benchmarks if b in aggregated_benchmarks]
+        target_benchmarks = [
+            b for b in selected_benchmarks if b in aggregated_benchmarks
+        ]
 
         if not target_benchmarks:
             print(f"No matching benchmarks found for {exp_name}")
@@ -839,7 +783,10 @@ def plot_diagnose_figure(
         if smoothing_factor > 0 or smoothing_method != "none":
             for key in aggregated_data:
                 aggregated_data[key] = smooth_curve(
-                    aggregated_data[key], common_steps, smoothing_factor, smoothing_method
+                    aggregated_data[key],
+                    common_steps,
+                    smoothing_factor,
+                    smoothing_method,
                 )
 
         # Subplot configurations: (col, term_key, factors, labels)
@@ -980,7 +927,9 @@ def plot_diagnose_figure(
 
             # Right Y-axis label only on rightmost column
             if col == 3:
-                ax_right.set_ylabel("Factor Probability", fontsize=16, fontweight="medium")
+                ax_right.set_ylabel(
+                    "Factor Probability", fontsize=16, fontweight="medium"
+                )
 
             ax_left.tick_params(axis="y", labelcolor=term_color)
             ax_right.set_ylim(0, 1.0)  # Fixed 0-1 for factors
@@ -998,13 +947,21 @@ def plot_diagnose_figure(
                 lines = [line_term, line_mass, line_policy, line_quality]
                 labels = [l.get_label() for l in lines]
                 ax_left.legend(
-                    lines, labels, loc="best", fontsize=9, frameon=True, fancybox=True, shadow=True
+                    lines,
+                    labels,
+                    loc="best",
+                    fontsize=9,
+                    frameon=True,
+                    fancybox=True,
+                    shadow=True,
                 )
 
             # Scale x-axis by 8
             from matplotlib.ticker import FuncFormatter
 
-            ax_left.xaxis.set_major_formatter(FuncFormatter(lambda x, p: f"{int(x * 8)}"))
+            ax_left.xaxis.set_major_formatter(
+                FuncFormatter(lambda x, p: f"{int(x * 8)}")
+            )
 
         # Add row label (a), (b), (c) with model name - centered below each row
         if captions and exp_idx < len(captions):
@@ -1034,7 +991,9 @@ def plot_diagnose_figure(
     import warnings
 
     with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", message=".*not compatible with tight_layout.*")
+        warnings.filterwarnings(
+            "ignore", message=".*not compatible with tight_layout.*"
+        )
         plt.tight_layout()
         plt.subplots_adjust(hspace=0.35)  # Adjust vertical spacing for row labels
 
@@ -1063,8 +1022,8 @@ def plot_measure_figure(
     aggregated_benchmarks: list[str],
     smoothing_factor: float = 0.99,
     smoothing_method: str = "time_weighted_ema",
-    output_dir: str = "paper_figures",
-    output_filename: str = "perception_aggregated.pdf",
+    output_dir: str = "figures",
+    output_filename: str = "measure_figure.pdf",
     captions: list[str] | None = None,
 ):
     """Plot paper figure with multiple experiments.
@@ -1113,14 +1072,18 @@ def plot_measure_figure(
         selected_benchmarks = get_sorted_benchmarks(df)
 
         # Filter selected benchmarks based on aggregated_benchmarks
-        target_benchmarks = [b for b in selected_benchmarks if b in aggregated_benchmarks]
+        target_benchmarks = [
+            b for b in selected_benchmarks if b in aggregated_benchmarks
+        ]
 
         if not target_benchmarks:
             print(f"No matching benchmarks found for {exp_name}")
             continue
 
         # Aggregate data
-        agg_data = aggregate_benchmarks(df, target_benchmarks, smoothing_factor, smoothing_method)
+        agg_data = aggregate_benchmarks(
+            df, target_benchmarks, smoothing_factor, smoothing_method
+        )
 
         if agg_data is None:
             print(f"Failed to aggregate data for {exp_name}")
@@ -1145,7 +1108,9 @@ def plot_measure_figure(
         # ============================================
         # LEFT SUBPLOT: Δ Performance (relative)
         # ============================================
-        ax_left.axhline(y=0, color="gray", linestyle="--", linewidth=1.5, alpha=0.6, zorder=1)
+        ax_left.axhline(
+            y=0, color="gray", linestyle="--", linewidth=1.5, alpha=0.6, zorder=1
+        )
 
         # w/ tool curve
         ax_left.plot(
@@ -1213,12 +1178,25 @@ def plot_measure_figure(
         positive_labeled = False
         negative_labeled = False
         for i in range(len(steps_dense) - 1):
-            x_fill = [steps_dense[i], steps_dense[i + 1], steps_dense[i + 1], steps_dense[i]]
-            y_fill = [wo_tool_dense[i], wo_tool_dense[i + 1], w_tool_dense[i + 1], w_tool_dense[i]]
+            x_fill = [
+                steps_dense[i],
+                steps_dense[i + 1],
+                steps_dense[i + 1],
+                steps_dense[i],
+            ]
+            y_fill = [
+                wo_tool_dense[i],
+                wo_tool_dense[i + 1],
+                w_tool_dense[i + 1],
+                w_tool_dense[i],
+            ]
 
             alpha = alpha_values[i]
 
-            if w_tool_dense[i] >= wo_tool_dense[i] and w_tool_dense[i + 1] >= wo_tool_dense[i + 1]:
+            if (
+                w_tool_dense[i] >= wo_tool_dense[i]
+                and w_tool_dense[i + 1] >= wo_tool_dense[i + 1]
+            ):
                 if not positive_labeled:
                     ax_left.fill(
                         x_fill,
@@ -1239,7 +1217,10 @@ def plot_measure_figure(
                         edgecolor="none",
                         zorder=1.5,
                     )
-            elif w_tool_dense[i] < wo_tool_dense[i] and w_tool_dense[i + 1] < wo_tool_dense[i + 1]:
+            elif (
+                w_tool_dense[i] < wo_tool_dense[i]
+                and w_tool_dense[i + 1] < wo_tool_dense[i + 1]
+            ):
                 if not negative_labeled:
                     ax_left.fill(
                         x_fill,
@@ -1285,8 +1266,12 @@ def plot_measure_figure(
         # Calculate proportions
         total_area_agg = abs_base_area_agg + abs_tool_area_agg
         base_frac_agg = abs_base_area_agg / total_area_agg if total_area_agg > 0 else 0
-        tool_pos_frac_agg = positive_area_agg / total_area_agg if total_area_agg > 0 else 0
-        tool_neg_frac_agg = abs(negative_area_agg) / total_area_agg if total_area_agg > 0 else 0
+        tool_pos_frac_agg = (
+            positive_area_agg / total_area_agg if total_area_agg > 0 else 0
+        )
+        tool_neg_frac_agg = (
+            abs(negative_area_agg) / total_area_agg if total_area_agg > 0 else 0
+        )
 
         # Background bar (white with black border)
         ax_left.add_patch(
@@ -1435,7 +1420,9 @@ def plot_measure_figure(
         cax.set_ylim(0, 1)
         cax.set_xticks([])
         cax.set_yticks([0, 0.5, 1])
-        cax.set_yticklabels(["1", "0", "1"], fontsize=PAPER_FIG_CONFIG["colorbar_tick_fontsize"])
+        cax.set_yticklabels(
+            ["1", "0", "1"], fontsize=PAPER_FIG_CONFIG["colorbar_tick_fontsize"]
+        )
         cax.yaxis.tick_right()
         cax.set_ylabel(
             "Call Rate",
@@ -1463,7 +1450,9 @@ def plot_measure_figure(
             fontweight="medium",
         )
         ax_left.grid(
-            True, alpha=PAPER_FIG_CONFIG["grid_alpha"], linewidth=PAPER_FIG_CONFIG["grid_linewidth"]
+            True,
+            alpha=PAPER_FIG_CONFIG["grid_alpha"],
+            linewidth=PAPER_FIG_CONFIG["grid_linewidth"],
         )
         ax_left.set_axisbelow(True)
         ax_left.legend(
@@ -1474,7 +1463,9 @@ def plot_measure_figure(
             fancybox=True,
             shadow=True,
         )
-        ax_left.set_ylim(None, 1)  # Upper limit at 1 for normalized drift ([-1, 1] range)
+        ax_left.set_ylim(
+            None, 1
+        )  # Upper limit at 1 for normalized drift ([-1, 1] range)
 
         # Scale x-axis labels by 8
         from matplotlib.ticker import FuncFormatter
@@ -1588,7 +1579,9 @@ def plot_measure_figure(
             "Accuracy", fontsize=PAPER_FIG_CONFIG["label_fontsize"], fontweight="medium"
         )
         ax_right.grid(
-            True, alpha=PAPER_FIG_CONFIG["grid_alpha"], linewidth=PAPER_FIG_CONFIG["grid_linewidth"]
+            True,
+            alpha=PAPER_FIG_CONFIG["grid_alpha"],
+            linewidth=PAPER_FIG_CONFIG["grid_linewidth"],
         )
         ax_right.set_axisbelow(True)
         # ax_right.set_ylim(0, 1)  # Accuracy range [0, 1]
@@ -1622,7 +1615,9 @@ def plot_measure_figure(
     import warnings
 
     with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", message=".*not compatible with tight_layout.*")
+        warnings.filterwarnings(
+            "ignore", message=".*not compatible with tight_layout.*"
+        )
         plt.tight_layout()  # No need for rect since labels are now centered below
         plt.subplots_adjust(wspace=0.30, hspace=0.45)  # wspace控制横向，hspace控制纵向``
 
@@ -1649,7 +1644,9 @@ def plot_measure_figure(
 if __name__ == "__main__":
     import argparse
 
-    parser = argparse.ArgumentParser(description="Plot paper figures for multiple experiments")
+    parser = argparse.ArgumentParser(
+        description="Plot paper figures for multiple experiments"
+    )
     parser.add_argument(
         "experiment_names",
         type=str,
@@ -1678,8 +1675,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--output_filename",
         type=str,
-        default="perception_aggregated.pdf",
-        help="Output filename (default: perception_aggregated.pdf)",
+        default="perception",
+        help="Base output filename (default: perception). Will generate {filename}_measure.pdf, {filename}_explain.pdf, {filename}_diagnose.pdf",
     )
     parser.add_argument(
         "--captions",
@@ -1716,7 +1713,7 @@ if __name__ == "__main__":
             args.smoothing_factor,
             args.smoothing_method,
             args.output_dir,
-            "perception_aggregated.pdf",
+            f"{args.output_filename}_measure.pdf",
             args.captions,
         )
 
@@ -1730,7 +1727,7 @@ if __name__ == "__main__":
             args.smoothing_factor,
             args.smoothing_method,
             args.output_dir,
-            "term_absolute_values.pdf",
+            f"{args.output_filename}_explain.pdf",
             args.captions,
         )
 
@@ -1744,6 +1741,6 @@ if __name__ == "__main__":
             args.smoothing_factor,
             args.smoothing_method,
             args.output_dir,
-            "term_factor_decomposition.pdf",
+            f"{args.output_filename}_diagnose.pdf",
             args.captions,
         )
