@@ -1,7 +1,8 @@
 # Migration and tests (project-specific)
-migration/
 tests/
 .claude/
+/scripts/
+evals/
 CLAUDE.md
 
 # Python
