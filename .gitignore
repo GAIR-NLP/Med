@@ -1,7 +1,5 @@
 # Migration and tests (project-specific)
-tests/
 .claude/
-/scripts/
 evals/
 CLAUDE.md
 

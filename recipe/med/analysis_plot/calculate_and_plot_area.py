@@ -9,12 +9,6 @@ RESULTS_DIR = Path("evals")
 CSV_PATTERN = "**/*_results.csv"
 
 BENCHMARK_ORDER = [
-    "charxiv2rq",
-    "mathvision",
-    "mathvista",
-    "mme",
-    "mmmu",
-    "mmmupro",
     "vstar",
     "hrbench4k",
     "hrbench8k",
