@@ -3,11 +3,8 @@ tests/
 .claude/
 CLAUDE.md
 
-# Evals - ignore contents but keep directory structure and assets
-evals/*
-!evals/.gitkeep
-!evals/assets/
-!evals/assets/**
+# Evals - ignore entire directory (download separately from HuggingFace)
+evals/
 
 # Python
 __pycache__/
