@@ -2,8 +2,13 @@
 tests/
 .claude/
 /scripts/
-evals/
 CLAUDE.md
+
+# Evals - ignore contents but keep directory structure and assets
+evals/*
+!evals/.gitkeep
+!evals/assets/
+!evals/assets/**
 
 # Python
 __pycache__/
@@ -76,3 +81,4 @@ paper_figures/
 *.png
 !assets/*.pdf
 !assets/*.png
+!evals/assets/*.png
