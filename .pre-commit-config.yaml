@@ -1,0 +1,31 @@
+repos:
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.12.0
+    hooks:
+      - id: isort
+        args:
+          - --profile=black
+  - repo: https://github.com/myint/autoflake
+    rev: v2.2.1
+    hooks:
+      - id: autoflake
+        args:
+          - -r
+          - --exclude=__init__.py
+          - --in-place
+          - --remove-unused-variables
+          - --remove-all-unused-imports
+  - repo: https://github.com/python/black
+    rev: 23.9.1
+    hooks:
+      - id: black
+        args:
+          - --line-length=88
+          - --target-version=py311
+  - repo: https://github.com/pycqa/flake8
+    rev: 6.1.0
+    hooks:
+      - id: flake8
+        args:
+          - --ignore=E203,E501,W503,E128,W291
+          - --max-line-length=88
