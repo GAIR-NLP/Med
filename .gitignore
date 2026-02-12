@@ -1,7 +1,6 @@
 # Migration and tests (project-specific)
 tests/
 .claude/
-/scripts/
 CLAUDE.md
 
 # Evals - ignore contents but keep directory structure and assets
