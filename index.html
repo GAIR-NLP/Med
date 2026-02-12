@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <script src="template.v2.js"></script>
+        <link rel="stylesheet" href="style.css">
+
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.2/dist/katex.min.css" integrity="sha384-yFRtMMDnQtDRO8rLpMIKrtPCD5jdktao2TV19YiZYWMDkUR5GQZR/NOVTdquEx1j" crossorigin="anonymous">
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.10.2/dist/katex.min.js" integrity="sha384-9Nhn55MVVN0/4OFx7EE5kpFBPsEMZxKTCnA+4fqDmg12eCTqGi6+BB2LjY8brQxJ" crossorigin="anonymous"></script>
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.10.2/dist/contrib/auto-render.min.js" integrity="sha384-kWPLUVMOks5AQFrykwIup5lo0m3iMkkHrD0uJ4H5cjeGihAutqP0yW0J6dpFiVkI" crossorigin="anonymous"
+            onload="renderMathInElement(document.body);"></script>
+
+        <title>MED: Measure-Explain-Diagnose Framework</title>
+    </head>
+    <body>
+        <div class="header-container">
+            <div class="header-content">
+              <h1>What Does Vision Tool-Use Reinforcement Learning Really Learn?<br><span style="font-size: 0.8em;">Disentangling Tool-Induced and Intrinsic Effects for Crop-and-Zoom</span></h1>
+              <div class="button-container">
+                <a href="https://arxiv.org/abs/2602.01334" class="button">Paper</a>
+                <a href="https://github.com/GAIR-NLP/Med" class="button">Code</a>
+                <a href="https://huggingface.co/datasets/Med2026/Med-eval-logs" class="button">Eval Logs</a>
+              </div>
+            </div>
+            <div class="header-image">
+                <img src="images/framework.png" alt="MED Framework" class="teaser-image">
+            </div>
+        </div>
+    <d-article>
+        <div class="byline">
+            <div class="byline-container">
+                <div class="byline-column">
+                    <h3>Authors</h3>
+                    <p>Yan Ma</p>
+                    <p>Weiyu Zhang</p>
+                    <p>Tianle Li</p>
+                    <p>Linge Du</p>
+                    <p>Xuyang Shen</p>
+                    <p>Pengfei Liu</p>
+                </div>
+                <div class="byline-column">
+                    <h3>Publication</h3>
+                    <p>arXiv preprint</p>
+                    <p>arXiv:2602.01334</p>
+                </div>
+                <div class="byline-column">
+                    <h3>Date</h3>
+                    <p>February 2026</p>
+                </div>
+            </div>
+        </div>
+        <d-contents>
+            <nav>
+                <h4>Contents</h4>
+                <div><a href="#overview">Overview</a></div>
+                <div><a href="#framework">The MED Framework</a></div>
+                <div><a href="#results">Understanding the Results</a></div>
+                <div><a href="#citation">Citation</a></div>
+            </nav>
+        </d-contents>
+
+        <p><strong>TL;DR:</strong> <em>Vision tool-use RL enhances model performance by reducing tool-induced harm, but does not significantly improve tool-based correction of intrinsic failures.</em></p>
+
+        <section id="overview">
+            <h2>Overview</h2>
+            <p>
+                Vision tool-use reinforcement learning (RL) can equip vision-language models with visual operators such as crop-and-zoom and achieves strong performance gains, yet it remains unclear whether these gains are driven by improvements in tool use or evolving intrinsic capabilities.
+            </p>
+            <p>
+                We introduce <strong>MED</strong> (Measure-Explain-Diagnose), a coarse-to-fine framework that disentangles intrinsic capability changes from tool-induced effects, decomposes the tool-induced performance difference into gain and harm terms, and probes the mechanisms driving their evolution.
+            </p>
+
+            <h3>Key Findings</h3>
+            <ul>
+                <li><strong>Performance gains are primarily driven by intrinsic learning</strong> - Models improve their base reasoning capabilities</li>
+                <li><strong>Tool-use RL mainly reduces tool-induced harm</strong> - Reduces errors from tool invocation and weakens tool pattern interference</li>
+                <li><strong>Limited improvement in tool-based correction</strong> - Tools don't significantly improve correction of intrinsic failures</li>
+                <li><strong>Current vision RL learns to "safely coexist with tools"</strong> - Rather than fully mastering their strategic use</li>
+            </ul>
+        </section>
+
+        <section id="framework">
+            <h2>The MED Framework</h2>
+            <p>
+                The MED framework provides a <strong>coarse-to-fine analysis</strong> of vision tool-use reinforcement learning through three sequential steps:
+            </p>
+
+            <d-figure>
+                <figure>
+                    <img src="images/framework.png" alt="MED Framework">
+                    <figcaption>The MED framework: Measure quantifies drift components, Explain decomposes into gain/harm terms, and Diagnose factorizes each term into Mass × Policy × Quality factors.</figcaption>
+                </figure>
+            </d-figure>
+
+            <h3>1. Measure: Quantifying Drift Components</h3>
+            <p>
+                Quantify tool-induced drift by decomposing tool-available drift into intrinsic and tool-induced components.
+            </p>
+
+            <h3>2. Explain: 4-Term Decomposition</h3>
+            <p>
+                Decompose tool-induced performance gap into Gross Gain and Gross Harm via 4-term analysis:
+            </p>
+            <ul>
+                <li><strong>Call Gain (Term 1):</strong> Intrinsic failures corrected by tool execution</li>
+                <li><strong>Schema Gain (Term 2):</strong> Intrinsic failures recovered under tool schema without invocation</li>
+                <li><strong>Call Harm (Term 3):</strong> Intrinsic successes lost due to tool calls</li>
+                <li><strong>Schema Harm (Term 4):</strong> Intrinsic successes lost under tool schema without invocation</li>
+            </ul>
+
+            <h3>3. Diagnose: Factor Analysis</h3>
+            <p>
+                Factorize each term into Mass, Policy, and Quality to probe root causes of term evolution:
+            </p>
+            <ul>
+                <li><strong>Mass:</strong> Domain size P(D) - capacity for gain/harm</li>
+                <li><strong>Policy:</strong> Calling probability P(call|D) - when to use the tool</li>
+                <li><strong>Quality:</strong> Success rate P(✓|call,D) - how well the tool is used</li>
+            </ul>
+        </section>
+
+        <section id="results">
+            <h2>Understanding the Results</h2>
+
+            <h3>MEASURE: Intrinsic vs Tool-Induced Drift</h3>
+            <d-figure>
+                <figure>
+                    <img src="images/measure.png" alt="Measure Figure">
+                    <figcaption>
+                        The MEASURE figure decomposes tool-available drift into intrinsic drift (grey area) and tool-induced drift (colored area).
+                        Tool contribution ratio S<sub>tool</sub> shows that tool-induced effects account for only ~20-30% of total improvement.
+                    </figcaption>
+                </figure>
+            </d-figure>
+
+            <h3>EXPLAIN: Gross Gain vs Gross Harm</h3>
+            <d-figure>
+                <figure>
+                    <img src="images/explain.png" alt="Explain Figure">
+                    <figcaption>
+                        The EXPLAIN figure shows the 4-term decomposition. Gross Gain stagnates (Call Gain plateaus) while Gross Harm decreases consistently,
+                        indicating RL primarily reduces tool-induced harm rather than maximizing tool-based correction.
+                    </figcaption>
+                </figure>
+            </d-figure>
+
+            <h3>DIAGNOSE: Mass × Policy × Quality</h3>
+            <d-figure>
+                <figure>
+                    <img src="images/diagnose.png" alt="Diagnose Figure">
+                    <figcaption>
+                        The DIAGNOSE figure factorizes each term. Key findings: limited failure correction (Call Gain quality shows little improvement),
+                        reduced breakage (Call Harm quality decreases), and schema interference mitigation (Schema Harm decreases).
+                    </figcaption>
+                </figure>
+            </d-figure>
+
+            <h3>Bottom Line</h3>
+            <p>
+                Current vision tool-use RL learns to <strong>safely coexist</strong> with tools rather than <strong>master</strong> them:
+            </p>
+            <ol>
+                <li>Tool effects contribute minimally (~20-30%) compared to intrinsic improvements</li>
+                <li>RL primarily reduces harm (fewer tool-induced errors) rather than increasing gain (better failure correction)</li>
+                <li>Models improve at not breaking existing capabilities, but show limited progress in using tools to fix hard cases</li>
+            </ol>
+        </section>
+
+        </d-article>
+        <d-appendix>
+            <section id="citation">
+                <h3>Citation</h3>
+                <p class="bibtex">
+                    @article{ma2026does,<br>
+                    &nbsp;&nbsp;title={What Does Vision Tool-Use Reinforcement Learning Really Learn? Disentangling Tool-Induced and Intrinsic Effects for Crop-and-Zoom},<br>
+                    &nbsp;&nbsp;author={Ma, Yan and Zhang, Weiyu and Li, Tianle and Du, Linge and Shen, Xuyang and Liu, Pengfei},<br>
+                    &nbsp;&nbsp;journal={arXiv preprint arXiv:2602.01334},<br>
+                    &nbsp;&nbsp;year={2026}<br>
+                    }
+                </p>
+            </section>
+
+            <d-footnote-list></d-footnote-list>
+            <d-citation-list></d-citation-list>
+        </d-appendix>
+
+    </body>
+</html>
