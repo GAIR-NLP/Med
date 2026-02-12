@@ -8,7 +8,7 @@
 </p>
 
 <p align="center">
-  <img src="assets/framework.png" width="90%" alt="MED Framework">
+  <img src="assets/framework.png" width="100%" alt="MED Framework">
 </p>
 
 ## Overview
@@ -132,7 +132,7 @@ The MED framework provides three levels of analysis, each visualized in separate
 ### MEASURE: Quantifying Drift Components
 
 <p align="center">
-  <img src="assets/measure.png" width="60%" alt="Measure">
+  <img src="assets/measure.png" width="100%" alt="Measure">
 </p>
 
 The MEASURE figure decomposes tool-available drift f<sub>w</sub>(t) into two components:
@@ -150,7 +150,7 @@ The MEASURE figure decomposes tool-available drift f<sub>w</sub>(t) into two com
 ### EXPLAIN: 4-Term Decomposition
 
 <p align="center">
-  <img src="assets/explain.png" width="60%" alt="Explain">
+  <img src="assets/explain.png" width="100%" alt="Explain">
 </p>
 
 The EXPLAIN figure decomposes the tool-induced performance gap G(t) = Acc<sub>w</sub>(t) - Acc<sub>wo</sub>(t) into:
@@ -170,7 +170,7 @@ The EXPLAIN figure decomposes the tool-induced performance gap G(t) = Acc<sub>w<
 ### DIAGNOSE: Factor Analysis
 
 <p align="center">
-  <img src="assets/diagnose.png" width="60%" alt="Diagnose">
+  <img src="assets/diagnose.png" width="100%" alt="Diagnose">
 </p>
 
 The DIAGNOSE figure factorizes each of the four terms into:
