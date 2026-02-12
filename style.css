@@ -1,14 +1,14 @@
 /* Base styles */
 .header-container {
-  background-color: #008482; /* Dark teal background */
-  color: #FEF5B8;
+  background-color: #8B1538; /* Burgundy wine red background */
+  color: #FFF8DC; /* Cornsilk text */
   text-align: center; /* Center content on small screens */
   padding: 20px; /* Reduced padding for small screens */
 }
 
 
 .header-content h1 {
-  font-size: 1.5em; /* Adjust font size for small screens */
+  font-size: 1.3em; /* Adjust font size for small screens */
   margin-bottom: 0.5em;
   line-height: 1.2;
 }
@@ -32,9 +32,9 @@
 }
 
 .button-container a.button {
-  background-color: #F2D3B4; /* Yellow background */
-  color: #000; /* Black text */
-  border: 2px solid #ffc107; /* Orange border */
+  background-color: #F5DEB3; /* Wheat background */
+  color: #8B1538; /* Burgundy text */
+  border: 2px solid #D4AF37; /* Gold border */
   border-radius: 25px; /* Rounded borders */
   padding: 10px 20px; /* Top and bottom padding, left and right padding */
   margin: 5px; /* Space between the buttons */
@@ -45,7 +45,7 @@
 }
 
 .button-container a.button:hover {
-  background-color: #EAB682; /* Darker yellow background on hover */
+  background-color: #D4AF37; /* Gold background on hover */
   color: #fff; /* White text on hover */
 }
 
@@ -53,7 +53,8 @@
 @media (min-width: 600px) {
   .header-container {
     display: flex; /* Use flexbox for positioning on larger screens */
-    justify-content: space-between; /* Space between the content and image */
+    justify-content: center; /* Center the content */
+    gap: 40px; /* Fixed gap between title and logo */
     align-items: center; /* Align items vertically */
     padding: 50px 50px; /* Increase padding for larger screens */
   }
@@ -61,11 +62,10 @@
   .header-content {
     max-width: calc(50% - 20px); /* Adjust width to include margin */
     text-align: left; /* Align text to the left for larger screens */
-    margin-right: 20px; /* Add margin to the right of the header content */
   }
 
   .header-content h1 {
-    font-size: 3em; /* Increase font size for larger screens */
+    font-size: 2.2em; /* Adjusted font size for better fit */
   }
 
   .header-image {
@@ -73,7 +73,7 @@
   }
 
   .header-image img {
-    max-width: 100%; /* Image should be responsive within the container */
+    max-width: 350px; /* Limit logo size */
     height: auto; /* Maintain the aspect ratio */
   }
 }
@@ -133,12 +133,12 @@
 
 d-article {
   contain: none;
+  overflow: visible;
 }
 
 d-article d-contents {
   max-width: 100%; /* Or the maximum width you want it to have */
   box-sizing: border-box; /* Include padding in the width calculation */
-  align-self: start;
   grid-column: 1 / 4;
   grid-row: auto / span 4;
   justify-self: end;
@@ -147,6 +147,11 @@ d-article d-contents {
   padding-left: 2em;
   border-right: 1px solid rgba(0, 0, 0, 0.1);
   z-index: 1000;
+  position: sticky;
+  top: 2em;
+  align-self: flex-start;
+  max-height: calc(100vh - 4em);
+  overflow-y: auto;
 }
 
 

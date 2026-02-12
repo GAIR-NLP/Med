@@ -5,6 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <script src="template.v2.js"></script>
         <link rel="stylesheet" href="style.css">
+        <link rel="icon" type="image/png" href="images/logo.png">
 
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.2/dist/katex.min.css" integrity="sha384-yFRtMMDnQtDRO8rLpMIKrtPCD5jdktao2TV19YiZYWMDkUR5GQZR/NOVTdquEx1j" crossorigin="anonymous">
         <script defer src="https://cdn.jsdelivr.net/npm/katex@0.10.2/dist/katex.min.js" integrity="sha384-9Nhn55MVVN0/4OFx7EE5kpFBPsEMZxKTCnA+4fqDmg12eCTqGi6+BB2LjY8brQxJ" crossorigin="anonymous"></script>
@@ -24,7 +25,7 @@
               </div>
             </div>
             <div class="header-image">
-                <img src="images/framework.png" alt="MED Framework" class="teaser-image">
+                <img src="images/logo.png" alt="MED Logo" class="teaser-image">
             </div>
         </div>
     <d-article>
@@ -32,12 +33,12 @@
             <div class="byline-container">
                 <div class="byline-column">
                     <h3>Authors</h3>
-                    <p>Yan Ma</p>
-                    <p>Weiyu Zhang</p>
+                    <p>Yan Ma*</p>
+                    <p>Weiyu Zhang*</p>
                     <p>Tianle Li</p>
                     <p>Linge Du</p>
-                    <p>Xuyang Shen</p>
-                    <p>Pengfei Liu</p>
+                    <p>Xuyang Shen†</p>
+                    <p>Pengfei Liu†</p>
                 </div>
                 <div class="byline-column">
                     <h3>Publication</h3>
@@ -53,22 +54,53 @@
         <d-contents>
             <nav>
                 <h4>Contents</h4>
+                <div><a href="#introduction">Introduction</a></div>
                 <div><a href="#overview">Overview</a></div>
                 <div><a href="#framework">The MED Framework</a></div>
                 <div><a href="#results">Understanding the Results</a></div>
+                <div><a href="#conclusion">Conclusion</a></div>
                 <div><a href="#citation">Citation</a></div>
             </nav>
         </d-contents>
 
         <p><strong>TL;DR:</strong> <em>Vision tool-use RL enhances model performance by reducing tool-induced harm, but does not significantly improve tool-based correction of intrinsic failures.</em></p>
 
+        <section id="introduction">
+            <h2>Introduction</h2>
+            <p>
+                Vision tool-use RL equips vision-language models with explicit visual operators (e.g., crop-and-zoom) and trains them to invoke tools during reasoning.
+                Empirically, this yields sizeable performance gains on multimodal benchmarks.
+                However, a central question remains insufficiently understood:
+                <em><strong>what does vision tool-use RL actually learn?</strong></em>
+            </p>
+            <p>
+                Performance improvements may arise from three distinct sources:
+                (1) strengthening the model's <em>intrinsic</em> capability (better perception even without tools);
+                (2) improving <em>tool use itself</em> (better when-to-call decisions and execution quality);
+                (3) reducing <em>tool-induced side effects</em> (fewer harmful calls, less schema interference).
+                Existing evaluations typically report end-to-end tool-available accuracy, thereby hindering a mechanistic attribution of the gains.
+            </p>
+            <p>
+                We introduce <strong>MED (Measure-Explain-Diagnose)</strong>, a coarse-to-fine analysis framework to disentangle
+                intrinsic capability changes from tool-induced effects.
+                MED quantifies how much performance change comes from intrinsic improvement,
+                decomposes tool-induced effects into gain and harm components,
+                and diagnoses the underlying mechanisms driving these changes.
+            </p>
+        </section>
+
         <section id="overview">
             <h2>Overview</h2>
             <p>
-                Vision tool-use reinforcement learning (RL) can equip vision-language models with visual operators such as crop-and-zoom and achieves strong performance gains, yet it remains unclear whether these gains are driven by improvements in tool use or evolving intrinsic capabilities.
+                Reinforcement learning (RL)-based post-training has recently been extended to multimodal settings,
+                where vision-language models (VLMs) are equipped with visual operators such as crop-and-zoom to enable interactive perception.
+                While this paradigm achieves strong performance gains on multimodal benchmarks,
+                it remains unclear whether these gains are driven by improvements in tool use or evolving intrinsic capabilities.
             </p>
             <p>
-                We introduce <strong>MED</strong> (Measure-Explain-Diagnose), a coarse-to-fine framework that disentangles intrinsic capability changes from tool-induced effects, decomposes the tool-induced performance difference into gain and harm terms, and probes the mechanisms driving their evolution.
+                The <strong>MED</strong> framework provides a systematic answer by disentangling intrinsic capability changes from tool-induced effects,
+                decomposing the tool-induced performance difference into gain and harm terms,
+                and probing the mechanisms driving their evolution through checkpoint-level analysis.
             </p>
 
             <h3>Key Findings</h3>
@@ -95,77 +127,241 @@
 
             <h3>1. Measure: Quantifying Drift Components</h3>
             <p>
-                Quantify tool-induced drift by decomposing tool-available drift into intrinsic and tool-induced components.
+                We measure progress as the change in accuracy from the initial checkpoint. The <strong>drift</strong> is defined as:
+                $$f_{\mathrm{wo}}(t) = \mathrm{Acc}_{\mathrm{wo}}(t) - \mathrm{Acc}_{\mathrm{wo}}(0), \quad f_{\mathrm{w}}(t) = \mathrm{Acc}_{\mathrm{w}}(t) - \mathrm{Acc}_{\mathrm{w}}(0)$$
+                where \(f_{\mathrm{wo}}(t)\) measures intrinsic capability change (tool-free), and \(f_{\mathrm{w}}(t)\) measures end-to-end change when tool use is available.
+            </p>
+            <p>
+                We define the <strong>tool-induced performance gap</strong> at checkpoint \(t\):
+                $$G(t) \triangleq \mathrm{Acc}_{\mathrm{w}}(t) - \mathrm{Acc}_{\mathrm{wo}}(t)$$
+                The evolution of this gap gives the <strong>tool-induced drift</strong>: \(\Delta_{\mathrm{tool}}(t) \triangleq G(t) - G(0)\).
+                This yields an additive decomposition of tool-available drift:
+                $$\underbrace{f_{\mathrm{w}}(t)}_{\text{Tool-available drift}}
+                =
+                \underbrace{f_{\mathrm{wo}}(t)}_{\text{Intrinsic drift}}
+                +
+                \underbrace{\Delta_{\mathrm{tool}}(t)}_{\text{Tool-induced drift}}$$
+            </p>
+            <p>
+                To summarize contributions over training, we measure the cumulative <em>magnitude</em> of each drift component:
+                $$|B_{\mathrm{wo}}| = \int_{0}^{T} | f_{\mathrm{wo}}(t) |\,dt, \quad
+                |B_{\Delta \mathrm{tool}}| = \int_{0}^{T} | \Delta_{\mathrm{tool}}(t) |\,dt$$
+                The <strong>tool contribution ratio</strong> is the fraction of total drift magnitude attributed to tool effects:
+                $$S_{\mathrm{tool}} = \frac{|B_{\Delta \mathrm{tool}}|}{|B_{\mathrm{wo}}| + |B_{\Delta \mathrm{tool}}|}$$
+                When \(S_{\mathrm{tool}} \approx 0\), intrinsic drift dominates; when \(S_{\mathrm{tool}} \approx 1\), tool-induced drift dominates.
             </p>
 
             <h3>2. Explain: 4-Term Decomposition</h3>
             <p>
-                Decompose tool-induced performance gap into Gross Gain and Gross Harm via 4-term analysis:
+                While \(S_{\text{tool}}\) quantifies the overall tool-induced drift magnitude, it does not explain the underlying dynamics.
+                To gain deeper understanding, we decompose the performance gap \(G(t)\) based on the model's intrinsic capability.
+            </p>
+            <p>
+                <strong>Partitioning via Intrinsic Capability:</strong>
+                At each checkpoint \(t\), intrinsic performance partitions the task set into two disjoint subsets:
+                the <em>failure set</em> \(\mathcal{D}_{\text{fail}}(t)\) (where the model fails without tools) and
+                the <em>success set</em> \(\mathcal{D}_{\text{succ}}(t)\) (where it succeeds).
+                This defines the potential for improvement on \(\mathcal{D}_{\text{fail}}\) versus regression on \(\mathcal{D}_{\text{succ}}\).
+            </p>
+            <p>
+                By conditioning on tool usage (\(c\): calling the tool; \(\checkmark\)/\(\times\): correct/incorrect prediction),
+                we obtain a four-term decomposition of \(G(t)\):
+            </p>
+            <p style="font-size: 0.9em;">
+                $$\begin{aligned}
+                G(t) = & \underbrace{P(\mathcal D_{\text{fail}}) P(c \mid \mathcal D_{\text{fail}}) P(\checkmark \mid c, \mathcal D_{\text{fail}})}_{\text{Term 1: Call Gain}} \\
+                & + \underbrace{P(\mathcal D_{\text{fail}}) P(\neg c \mid \mathcal D_{\text{fail}}) P(\checkmark \mid \neg c, \mathcal D_{\text{fail}})}_{\text{Term 2: Schema Gain}} \\
+                & - \underbrace{P(\mathcal D_{\text{succ}}) P(c \mid \mathcal D_{\text{succ}}) P(\times \mid c, \mathcal D_{\text{succ}})}_{\text{Term 3: Call Harm}} \\
+                & - \underbrace{P(\mathcal D_{\text{succ}}) P(\neg c \mid \mathcal D_{\text{succ}}) P(\times \mid \neg c, \mathcal D_{\text{succ}})}_{\text{Term 4: Schema Harm}}
+                \end{aligned}$$
             </p>
             <ul>
-                <li><strong>Call Gain (Term 1):</strong> Intrinsic failures corrected by tool execution</li>
-                <li><strong>Schema Gain (Term 2):</strong> Intrinsic failures recovered under tool schema without invocation</li>
-                <li><strong>Call Harm (Term 3):</strong> Intrinsic successes lost due to tool calls</li>
-                <li><strong>Schema Harm (Term 4):</strong> Intrinsic successes lost under tool schema without invocation</li>
+                <li><strong>Call Gain (Term 1):</strong> Intrinsic failures <em>corrected</em> by tool execution — quantifies tool execution contribution</li>
+                <li><strong>Schema Gain (Term 2):</strong> Intrinsic failures <em>recovered</em> under tool schema without invocation — beneficial side-effects of the tool prompt</li>
+                <li><strong>Call Harm (Term 3):</strong> Intrinsic successes <em>lost</em> due to tool calls — harm caused by invoking tools</li>
+                <li><strong>Schema Harm (Term 4):</strong> Intrinsic successes <em>lost</em> under tool schema without invocation — harmful side-effects of the tool prompt</li>
             </ul>
+            <p>
+                By isolating <em>Gross Gain</em> (Terms 1+2) from <em>Gross Harm</em> (Terms 3+4), we can distinguish skill acquisition from spurious shifts,
+                determining whether drift is <em>Gain-dominant</em> (emerging utility) or <em>Harm-dominant</em> (suppressed by interference).
+            </p>
 
             <h3>3. Diagnose: Factor Analysis</h3>
             <p>
-                Factorize each term into Mass, Policy, and Quality to probe root causes of term evolution:
+                While the 4-term decomposition explains <em>what</em> changes, each term is a product of three probabilities.
+                The specific cause of a temporal shift remains unclear.
+                For instance, a decline in Call Gain could result from: a shrinking failure set, lower calling probability, or degraded execution quality.
+            </p>
+            <p>
+                To pinpoint the root cause, we decompose each term into three factors:
+                $$\text{Term}(\mathcal{D}, a, o) = \underbrace{P(\mathcal{D})}_{\text{Mass}} \cdot \underbrace{P(a \mid \mathcal{D})}_{\text{Policy}} \cdot \underbrace{P(o \mid a, \mathcal{D})}_{\text{Quality}}$$
             </p>
             <ul>
-                <li><strong>Mass:</strong> Domain size P(D) - capacity for gain/harm</li>
-                <li><strong>Policy:</strong> Calling probability P(call|D) - when to use the tool</li>
-                <li><strong>Quality:</strong> Success rate P(✓|call,D) - how well the tool is used</li>
+                <li><strong>Mass (\(M\)):</strong> Domain size \(P(\mathcal{D})\) — the <em>capacity</em> available for the tool to generate gain or harm</li>
+                <li><strong>Policy (\(\pi\)):</strong> Calling probability \(P(a \mid \mathcal{D})\) — the model's <em>decision-making strategy</em> ("When to call")</li>
+                <li><strong>Quality (\(Q\)):</strong> Success rate \(P(o \mid a, \mathcal{D})\) — the model's <em>execution capability</em> ("How to use")</li>
             </ul>
+            <p>
+                <strong>Diagnostic Insights:</strong>
+                This factorization uncovers two critical training dynamics:
+                (1) <em>Intrinsic-Tool Trade-off</em>: As intrinsic capability improves, \(\mathcal{D}_{\text{fail}}\) shrinks, limiting the upper bound of Call Gain even if Quality improves;
+                (2) <em>Policy-Quality Decoupling</em>: We distinguish learning <em>to attempt</em> (Policy) from learning <em>to succeed</em> (Quality).
+            </p>
         </section>
 
         <section id="results">
             <h2>Understanding the Results</h2>
 
-            <h3>MEASURE: Intrinsic vs Tool-Induced Drift</h3>
+            <h3>MEASURE: The Dominance of Intrinsic Drift</h3>
             <d-figure>
                 <figure>
                     <img src="images/measure.png" alt="Measure Figure">
                     <figcaption>
-                        The MEASURE figure decomposes tool-available drift into intrinsic drift (grey area) and tool-induced drift (colored area).
-                        Tool contribution ratio S<sub>tool</sub> shows that tool-induced effects account for only ~20-30% of total improvement.
+                        <strong>Quantifying Intrinsic and Tool-Induced Drift.</strong>
+                        We aggregate learning dynamics across six benchmarks (VStar, HR-Bench 4k/8k, VisualProbe Easy/Medium/Hard), evaluated every 80 gradient steps (21 checkpoints).
+                        The grey area (\(|B_{\mathrm{wo}}|\)) quantifies the cumulative magnitude of intrinsic drift (\(f_\mathrm{wo}\)).
+                        The colored area represents the magnitude of tool-induced drift (\(\Delta_{\mathrm{tool}}\)):
+                        <span style="color: green;">Green</span> indicates positive relative gain (\(f_w > f_{wo}\)), while <span style="color: red;">red</span> indicates negative relative drift (\(f_w < f_{wo}\)).
+                        <em>Color intensity</em> corresponds to the tool call rate.
+                        The <em>top progress bar</em> displays the tool contribution ratio (\(S_{tool}\)), i.e., the proportion of total drift magnitude attributed to tool effects.
                     </figcaption>
                 </figure>
             </d-figure>
 
-            <h3>EXPLAIN: Gross Gain vs Gross Harm</h3>
+            <p><strong>Three Key Observations:</strong></p>
+            <ol>
+                <li><strong>Intrinsic drift dominates overall performance change.</strong>
+                    Contrary to common intuition, most performance gains are driven by improvements in intrinsic capability.
+                    The tool contribution ratio \(S_{\text{tool}}\) remains low (0.30 for Qwen2.5-VL and 0.22 for Qwen3-VL),
+                    indicating that over 70% of learning progress stems from intrinsic capability, independent of tool access.
+                </li>
+                <li><strong>Relative drift diverges across initialization regimes.</strong>
+                    Models with no prior tool training (Qwen2.5-VL) show positive gain (\(f_w > f_{wo}\), green area),
+                    while models with prior tool training (Qwen3-VL) exhibit negative relative drift (\(f_{wo} > f_w\), red area).
+                    This does not imply forgetting, but rather a shift in reliance: the tool becomes less critical as intrinsic capabilities expand.
+                </li>
+                <li><strong>Absolute performance improves monotonically.</strong>
+                    Despite negative relative drift in Qwen3-VL, absolute accuracy for both \(\text{Acc}_{w}\) and \(\text{Acc}_{wo}\) increases consistently.
+                </li>
+            </ol>
+
+            <h3>EXPLAIN: Mitigating Harm Rather Than Maximizing Gain</h3>
             <d-figure>
                 <figure>
                     <img src="images/explain.png" alt="Explain Figure">
                     <figcaption>
-                        The EXPLAIN figure shows the 4-term decomposition. Gross Gain stagnates (Call Gain plateaus) while Gross Harm decreases consistently,
-                        indicating RL primarily reduces tool-induced harm rather than maximizing tool-based correction.
+                        <strong>Decomposition of Tool-Induced Performance Gap \(G(t)\).</strong>
+                        Averaged across six benchmarks.
+                        The equation breaks down the net gap \(G(t)\) (yellow diamonds) into <em>Gross Gain</em> (green; T1+T2) and <em>Gross Harm</em> (red; T3+T4).
+                        Gross Gain consists of <span style="color: rgb(34,139,34);">Call Gain</span> (T1; intrinsic failures corrected via tool execution) and <span style="color: rgb(144,238,144);">Schema Gain</span> (T2; schema-only recovery without tool calls).
+                        Gross Harm consists of <span style="color: rgb(255,0,0);">Call Harm</span> (T3; intrinsic successes flipped to errors after tool calls) and <span style="color: rgb(255,182,193);">Schema Harm</span> (errors induced by the tool schema without calls).
+                        <strong>Key observation:</strong> Gross Gain stagnates while Gross Harm decreases consistently, indicating RL primarily reduces tool-induced harm rather than maximizing tool-based correction.
                     </figcaption>
                 </figure>
             </d-figure>
 
-            <h3>DIAGNOSE: Mass × Policy × Quality</h3>
+            <p><strong>Detailed Analysis:</strong></p>
+            <ul>
+                <li><strong>The Stagnation of Gross Gain.</strong>
+                    Call Gain (Term 1)—intrinsic failures corrected via tool calls—does not keep increasing.
+                    Instead, it plateaus after an early rise or declines monotonically, indicating saturation in the model's ability to extract additional tool-based gains.
+                </li>
+                <li><strong>The Consistent Reduction of Gross Harm.</strong>
+                    Gross Harm decreases steadily across both models, driven by reduced Schema Harm (Qwen2.5-VL) or Call Harm (Qwen3-VL).
+                    This indicates improved robustness to schema interference and fewer harmful tool invocations.
+                </li>
+                <li><strong>The Counterbalancing of Gain and Harm.</strong>
+                    The net performance gap \(G(t)\) plateaus because reduced Gross Harm is offset by saturated/declining Gross Gain.
+                    Harm decreases, but gain does not increase, keeping \(G(t)\) roughly constant.
+                </li>
+            </ul>
+
+            <h3>DIAGNOSE: Suppressing Errors Rather Than Enhancing Correction</h3>
             <d-figure>
                 <figure>
                     <img src="images/diagnose.png" alt="Diagnose Figure">
                     <figcaption>
-                        The DIAGNOSE figure factorizes each term. Key findings: limited failure correction (Call Gain quality shows little improvement),
+                        <strong>Factor Decomposition of Tool-Induced Effects.</strong>
+                        We show the temporal evolution of the four terms, factorized into Mass, Policy, and Quality.
+                        In each subplot, the <strong>thick line</strong> shows the term value (left axis), and <strong>thin lines</strong> show its factors (right axis):
+                        <span style="color: grey;"><em>Mass</em></span> (grey, \(P(\mathcal{D})\)),
+                        <span style="color: blue;"><em>Policy</em></span> (blue, \(P(a\mid\mathcal{D})\)), and
+                        <span style="color: orange;"><em>Quality</em></span> (orange, \(P(o\mid a,\mathcal{D})\)).
+                        <strong>Key findings:</strong> Limited failure correction (Call Gain quality shows little improvement on current failures),
                         reduced breakage (Call Harm quality decreases), and schema interference mitigation (Schema Harm decreases).
                     </figcaption>
                 </figure>
             </d-figure>
 
-            <h3>Bottom Line</h3>
+            <p><strong>Root Cause Analysis:</strong></p>
+            <ul>
+                <li><strong>Limited failure correction, but reduced breakage on successes.</strong>
+                    For Call Gain (T1), the correction success rate on intrinsic failures \(P(\checkmark\mid c,\mathcal{D}_{\text{fail}}(t))\) remains flat or declines.
+                    In contrast, for Call Harm (T3), the breakage rate on intrinsic successes \(P(\times\mid c,\mathcal{D}_{\text{succ}}(t))\) decreases consistently.
+                    RL primarily suppresses tool-induced errors on already-solved instances rather than strengthening tool-based failure correction.
+                </li>
+                <li><strong>RL mitigates the interference of tool schema.</strong>
+                    Models with prior tool exposure show minimal Schema Gain/Harm, while models new to the tool initially show sensitivity.
+                    Over training, RL drives down both Schema Gain and Schema Harm, reducing sensitivity to the tool schema.
+                </li>
+            </ul>
+
+            <h3>Robustness to the Moving Failure Set</h3>
+            <d-figure>
+                <figure>
+                    <img src="images/robust_to_moving_failure_set.png" alt="Moving Failure Set">
+                    <figcaption>
+                        <strong>Robustness to the Moving Failure Set.</strong>
+                        The Call-Gain quality \(P(\checkmark \mid c, \mathcal{D}_{\text{fail}})\) evaluated under different failure-set definitions:
+                        the current failure set \(\mathcal{D}_{\text{fail}}(t)\) (Dynamic),
+                        the fixed initial cohort \(\mathcal{D}_{\text{fail}}(0)\) (Fixed),
+                        and persistent failures \(\mathcal{D}_{\text{fail}}(0)\cap \mathcal{D}_{\text{fail}}(t)\).
+                        Improvement is observed on the fixed cohort but remains limited on the current and persistent failure sets.
+                    </figcaption>
+                </figure>
+            </d-figure>
+
             <p>
-                Current vision tool-use RL learns to <strong>safely coexist</strong> with tools rather than <strong>master</strong> them:
+                Because \(\mathcal{D}_{\text{fail}}(t)\) shifts in difficulty over training, we control for this by evaluating on:
+                (i) a fixed initial failure cohort \(\mathcal{D}_{\text{fail}}(0)\), and
+                (ii) persistent failures that remain unsolved.
+                We find that quality gains do not extend to the hardest remaining failures.
+            </p>
+
+            <h3>What Does Vision Tool-Use RL Really Learn?</h3>
+            <p>
+                Synthesizing the above findings, we answer the central question.
+                Contrary to the ideal of tool mastery, current vision tool-use RL learns a more conservative policy:
             </p>
             <ol>
-                <li>Tool effects contribute minimally (~20-30%) compared to intrinsic improvements</li>
-                <li>RL primarily reduces harm (fewer tool-induced errors) rather than increasing gain (better failure correction)</li>
-                <li>Models improve at not breaking existing capabilities, but show limited progress in using tools to fix hard cases</li>
+                <li><strong>Limited Contribution:</strong> Tool-induced effects remain a minor component (~20-30%) of overall improvement. While tool access contributes to performance, its effect is limited compared to intrinsic improvements.</li>
+                <li><strong>Interference Management:</strong> The model reduces Gross Harm by suppressing execution errors (\(P(\times \mid c, \mathcal{D}_{\text{succ}}) \downarrow\)) and mitigating schema distraction.</li>
+                <li><strong>Limited Failure Correction on Hard Cases:</strong> Call-Gain quality \(P(\checkmark \mid c,\mathcal{D}_{\text{fail}})\) shows little improvement on the current failure set and on persistent failures, indicating no strengthening of tool-based correction on instances that remain unsolved without tools.</li>
             </ol>
+            <p>
+                <strong>Ultimately, the model learns to <em>safely coexist</em> with the tool rather than <em>master</em> it.</strong>
+            </p>
         </section>
+
+            <section id="conclusion">
+                <h2>Conclusion</h2>
+                <p>
+                    In this work, we present a systematic analysis of what vision tool-use RL actually learns.
+                    By disentangling intrinsic capability drift from tool-induced effects, and further decomposing tool utility into gain, harm, and their underlying mechanisms,
+                    we show that performance improvements are dominated by intrinsic learning rather than by tool-induced effects.
+                </p>
+                <p>
+                    Across models and benchmarks, vision tool-use RL mainly reduces tool-induced harm, while showing limited improvement in tool contribution.
+                    Overall, vision tool-use RL learns a conservative policy for VLMs that makes tool availability less harmful,
+                    but does not reliably extend tool utility beyond the intrinsic hard core.
+                </p>
+                <p>
+                    <strong>Limitations:</strong>
+                    The analysis focuses on a single vision tool (crop-and-zoom); more complex tools or multi-tool settings may exhibit different dynamics.
+                    We analyze outcome-only RL with sparse rewards; tool-aware reward shaping or additional supervision may produce stronger execution learning.
+                    Future work could incorporate efficiency, tool-use traces, and more interpretability metrics.
+                </p>
+            </section>
 
         </d-article>
         <d-appendix>
@@ -180,6 +376,10 @@
                     }
                 </p>
             </section>
+
+            <p>
+                Website template adapted from <a href="https://vstar-seal.github.io/">V*: Guided Visual Search</a>.
+            </p>
 
             <d-footnote-list></d-footnote-list>
             <d-citation-list></d-citation-list>
