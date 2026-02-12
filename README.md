@@ -207,6 +207,19 @@ If you find this work helpful, please cite our paper:
 }
 ```
 
+## Roadmap
+
+We are progressively open-sourcing components of the MED project:
+
+- [x] **Evaluation logs** - Available at [HuggingFace](https://huggingface.co/datasets/Med2026/Med-eval-logs)
+- [x] **Analysis code** - MED framework implementation (`recipe/med/analysis_plot/`)
+- [ ] **Training data** - RL training dataset (~15k samples)
+- [ ] **Training code** - GRPO-based RL training pipeline
+- [ ] **Evaluation data** - Benchmark datasets (6 perception tasks)
+- [ ] **Evaluation code** - Evaluation pipeline for tool-free and tool-available protocols
+
+Stay tuned for updates!
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
