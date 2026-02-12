@@ -18,6 +18,19 @@ classifiers = [
 ]
 
 dependencies = [
+    # Scientific Computing (required for analysis_plot)
+    "numpy==2.2.6",
+    "scipy==1.16.3",
+    "pandas==2.3.3",
+
+    # Visualization and Plotting (required for analysis_plot)
+    "matplotlib",
+    "seaborn",
+]
+
+[project.optional-dependencies]
+# Training environment dependencies (install with: uv pip install -e ".[train]")
+train = [
     # Deep Learning Core
     "torch==2.9.1",
     "torchvision==0.24.1",
@@ -34,7 +47,7 @@ dependencies = [
     "qwen-vl-utils==0.0.14",
     "huggingface-hub==1.2.1",
 
-    # High-Performance Inference
+    # High-Performance Inference (including flash-attn)
     "flash-attn==2.8.3",
     "sglang==0.5.6.post1",
     "outlines==0.1.11",
@@ -46,10 +59,7 @@ dependencies = [
     "gymnasium==1.1.1",
     "tensordict==0.10.0",
 
-    # Scientific Computing
-    "numpy==2.2.6",
-    "scipy==1.16.3",
-    "pandas==2.3.3",
+    # Datasets
     "datasets==4.4.1",
 
     # Vision Processing
@@ -63,10 +73,6 @@ dependencies = [
     # Configuration Management
     "hydra-core==1.4.0.dev1",
     "omegaconf>=2.4.0.dev2",
-
-    # Visualization and Plotting
-    "matplotlib",
-    "seaborn",
 
     # Monitoring and Logging
     "wandb==0.23.0",
@@ -97,7 +103,7 @@ dependencies = [
     "TexSoup==0.3.1",
 ]
 
-[project.optional-dependencies]
+# Development tools
 dev = [
     "ruff==0.14.7",
     "pytest==9.0.1",
