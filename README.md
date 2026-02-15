@@ -6,6 +6,7 @@
   <a href="https://arxiv.org/abs/2602.01334"><img src="https://img.shields.io/badge/Paper-arXiv-red.svg" alt="Paper"></a>
   <a href="https://GAIR-NLP.github.io/Med/"><img src="https://img.shields.io/badge/Project-Homepage-blue.svg" alt="Homepage"></a>
   <a href="https://huggingface.co/datasets/Med2026/Med-eval-logs"><img src="https://img.shields.io/badge/Eval%20Logs-HuggingFace-yellow.svg" alt="Eval Logs"></a>
+  <a href="https://zhuanlan.zhihu.com/p/2005689547544093503"><img src="https://img.shields.io/badge/Blog-知乎-blue.svg" alt="Zhihu Blog"></a>
 </p>
 
 <p align="center">
