@@ -16,8 +16,8 @@ set -o pipefail
 
 # --- Dynamic Path Resolution ---
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-PROJECT_ROOT_DIR=/verl_vision/
-echo "✅ Project root detected: ${PROJECT_ROOT_DIR}"
+export BASE_DIR=${BASE_DIR:-"your-code-dir"}
+echo "✅ Project root detected: ${BASE_DIR}"
 
 # --- Configurable Variables ---
 APP_IMPORT_PATH="recipe.med.serve_ray:vision_app"
@@ -70,7 +70,7 @@ applications:
     runtime_env:
       env_vars:
         # THE FINAL FIX: Directly set PYTHONPATH for the workers.
-        PYTHONPATH: "${PROJECT_ROOT_DIR}"
+        PYTHONPATH: "${BASE_DIR}"
     deployments:
       - name: VisionToolServer
         num_replicas: ${NUM_REPLICAS}

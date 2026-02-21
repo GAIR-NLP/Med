@@ -17,9 +17,9 @@ from PIL import Image
 from ray import serve
 
 # 假设您的函数在这个路径
-from recipe.o3.vision_tool_fn import image_crop_and_zoom_in_tool, smart_crop_and_zoom
+from recipe.med.vision_tool_fn import image_crop_and_zoom_in_tool, smart_crop_and_zoom
 
-LOG_DIR = "/verl_vision/logs"  # <-- 指定一个你希望存放日志的目录
+LOG_DIR = "logs"  # <-- 指定一个你希望存放日志的目录
 LOG_FILE = os.path.join(LOG_DIR, "vision_tool_service.log")
 
 os.makedirs(LOG_DIR, exist_ok=True)

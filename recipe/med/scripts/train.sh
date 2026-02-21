@@ -2,67 +2,124 @@
 
 set -x
 
+# ============================================================
+# Runtime environment
+# ============================================================
+export CUDA_DEVICE_MAX_CONNECTIONS=${CUDA_DEVICE_MAX_CONNECTIONS:-1}
+export RAY_DEBUG=${RAY_DEBUG:-"legacy"}
+export TOKENIZERS_PARALLELISM=${TOKENIZERS_PARALLELISM:-True}
+export VLLM_USE_V1=${VLLM_USE_V1:-1}
+export VLLM_ALLREDUCE_USE_SYMM_MEM=${VLLM_ALLREDUCE_USE_SYMM_MEM:-0}
+
+# ============================================================
 # Distributed training
+# ============================================================
 export NUM_NODES=$(echo $VC_WORKER_HOSTS | tr ',' '\n' | wc -l)
 export GPUS_PER_NODE=${GPUS_PER_NODE:-8}
 echo "NUM_NODES: $NUM_NODES"
 echo "GPUS_PER_NODE: $GPUS_PER_NODE"
 
-# data
+# ============================================================
+# Model
+# ============================================================
+export ACTOR_LOAD_PATH=${ACTOR_LOAD_PATH:-"your-model-dir/Qwen3-VL-8B-Instruct"}
+export BASE_DIR=${BASE_DIR:-"your-code-dir"}
+
+# ============================================================
+# Data
+# ============================================================
+export DATA_TRAIN_FILE=${DATA_TRAIN_FILE:-"[your-data-files]"}
+export DATA_VAL_FILE=${DATA_VAL_FILE:-"[your-val-data-files]"}
+export DATA_GENERATION_BATCH_SIZE=${DATA_GENERATION_BATCH_SIZE:-256}
+export DATA_MAX_PROMPT_LENGTH=${DATA_MAX_PROMPT_LENGTH:-16000}
+export DATA_MAX_RES_LENGTH=${DATA_MAX_RES_LENGTH:-8192}
+export DATA_IMAGE_KEYWORD=${DATA_IMAGE_KEYWORD:-"images"}
 export DATA_FILTER_OVERLONG_PROMPTS=${DATA_FILTER_OVERLONG_PROMPTS:-False}
 export DATA_SHUFFLE=${DATA_SHUFFLE:-True}
-export DATA_VAL_BATCH_SIZE=${DATA_VAL_BATCH_SIZE:-8192}
+export DATA_VAL_BATCH_SIZE=${DATA_VAL_BATCH_SIZE:-4096}
 export ENFORCE_SINGLE_TURN=${ENFORCE_SINGLE_TURN:-False}
+export RETURN_RAW_CHAT=${RETURN_RAW_CHAT:-True}
+export RETURN_MULTI_MODAL_INPUTS=${RETURN_MULTI_MODAL_INPUTS:-True}
 
-export ROLLOUT_MODE=${ROLLOUT_MODE:-"async"}
-export DO_EVAL=${DO_EVAL:-True}
-# training
+# ============================================================
+# Actor training
+# ============================================================
+export ACTOR_LR=${ACTOR_LR:-"5e-7"}
+export ACTOR_PPO_GLOBAL_BSZ=${ACTOR_PPO_GLOBAL_BSZ:-32}
+export ACTOR_PPO_MICRO_BSZ=${ACTOR_PPO_MICRO_BSZ:-4}
+export ACTOR_PPO_MAX_TOKEN_LEN_PER_GPU=${ACTOR_PPO_MAX_TOKEN_LEN_PER_GPU:-25384}
+export USE_DYNAMIC_BSZ=${USE_DYNAMIC_BSZ:-True}
+export ACTOR_CLIP_RATIO=${ACTOR_CLIP_RATIO:-0.2}
+export ACTOR_CLIP_RATIO_LOW=${ACTOR_CLIP_RATIO_LOW:-0.2}
+export ACTOR_CLIP_RATIO_HIGH=${ACTOR_CLIP_RATIO_HIGH:-0.28}
+export ACTOR_LOSS_AGG_MODE=${ACTOR_LOSS_AGG_MODE:-"token-mean"}
 export ACTOR_KL_LOSS_USE=${ACTOR_KL_LOSS_USE:-False}
-export ACTOR_KL_LOSS_TYPE=${ACTOR_KL_LOSS_TYPE:-"low_var_kl"}
+export ACTOR_KL_LOSS_TYPE=${ACTOR_KL_LOSS_TYPE:-"mse"}
+export ACTOR_KL_LOSS_COEFF=${ACTOR_KL_LOSS_COEFF:-0.}
+export ACTOR_ENTROPY_COEFF=${ACTOR_ENTROPY_COEFF:-0}
 export ACTOR_USE_LIGER=${ACTOR_USE_LIGER:-False}
-export USE_TORCH_COMPILE=${USE_TORCH_COMPILE:-False}
-export USE_REMOVE_PADDING=${USE_REMOVE_PADDING:-False}
+export USE_TORCH_COMPILE=${USE_TORCH_COMPILE:-True}
+export USE_REMOVE_PADDING=${USE_REMOVE_PADDING:-True}
 export USE_FUSED_KERNELS=${USE_FUSED_KERNELS:-False}
+export FUSED_KERNEL_BACKEND=${FUSED_KERNEL_BACKEND:-"triton"}
 export LOSS_MODE=${LOSS_MODE:-"vanilla"}
-
-export ACTOR_PPO_MAX_TOKEN_LEN_PER_GPU=${ACTOR_PPO_MAX_TOKEN_LEN_PER_GPU:-$((ROLLOUT_N * (DATA_MAX_PROMPT_LENGTH + DATA_MAX_RES_LENGTH)))}
-
-# rollout
-export ROLLOUT_MAX_NUM_BATCHED_TOKENS=${ROLLOUT_MAX_NUM_BATCHED_TOKENS:-8192}
-
-# fine-grained lr
-export WARMUP_STYLE=${WARMUP_STYLE:-"constant"}
-export LR_WARMUP_STEPS_RATIO=${LR_WARMUP_STEPS_RATIO:-0.05}
-
-export ACTOR_LR_VIT=${ACTOR_LR_VIT:-$ACTOR_LR}
-export ACTOR_LR_CONNECTOR=${ACTOR_LR_CONNECTOR:-$ACTOR_LR}
-export ACTOR_LR_LLM=${ACTOR_LR_LLM:-$ACTOR_LR}
-# ACTOR_LR_FREEZE: can be only null or a list (must contain only in 'vit', 'connector', 'llm'), e.g., "['vit', 'connector']"
-export ACTOR_LR_FREEZE=${ACTOR_LR_FREEZE:-null}
+export ACTOR_FSDP_PARAM_OFFLOAD=${ACTOR_FSDP_PARAM_OFFLOAD:-False}
+export ACTOR_FSDP_OMT_OFFLOAD=${ACTOR_FSDP_OMT_OFFLOAD:-False}
 export FREEZE_VISION_TOWER=${FREEZE_VISION_TOWER:-True}
+export WARMUP_STYLE=${WARMUP_STYLE:-"constant"}
+export LR_WARMUP_STEPS_RATIO=${LR_WARMUP_STEPS_RATIO:-0.0}
+export ENTROPY_FROM_LOGITS_WITH_CHUNKING=${ENTROPY_FROM_LOGITS_WITH_CHUNKING:-False}
 
-# eval
+# ============================================================
+# Rollout
+# ============================================================
+export ROLLOUT_BACKEND=${ROLLOUT_BACKEND:-"sglang"}
+export ROLLOUT_MODE=${ROLLOUT_MODE:-"async"}
+export ROLLOUT_N=${ROLLOUT_N:-8}
+export ROLLOUT_TP_SIZE=${ROLLOUT_TP_SIZE:-1}
+export ROLLOUT_TEMP=${ROLLOUT_TEMP:-"1.0"}
+export ROLLOUT_MAX_GPU_MEM=${ROLLOUT_MAX_GPU_MEM:-"0.8"}
+export ROLLOUT_CHUNKED_PREFILL=${ROLLOUT_CHUNKED_PREFILL:-False}
+export ROLLOUT_ENFORCE_EAGER=${ROLLOUT_ENFORCE_EAGER:-False}
+export ROLLOUT_FREE_CACHE=${ROLLOUT_FREE_CACHE:-True}
+export ROLLOUT_MAX_NUM_BATCHED_TOKENS=${ROLLOUT_MAX_NUM_BATCHED_TOKENS:-8192}
+export LOG_P_MICRO_BSZ=${LOG_P_MICRO_BSZ:-32}
+
+# ============================================================
+# Algorithm
+# ============================================================
+export ALGO_ADV_ESTIMATOR=${ALGO_ADV_ESTIMATOR:-"reinforce_plus_plus_baseline"}
+export ALGO_KL_COEF=${ALGO_KL_COEF:-"0.0"}
+
+# ============================================================
+# Eval
+# ============================================================
+export DO_EVAL=${DO_EVAL:-True}
 export EVAL_BEFORE_TRAIN=${EVAL_BEFORE_TRAIN:-True}
 export EVAL_TEMP=${EVAL_TEMP:-0}
 export EVAL_TOPP=${EVAL_TOPP:-1}
 export EVAL_DO_SAMPLE=${EVAL_DO_SAMPLE:-False}
 export EVAL_TOPK=${EVAL_TOPK:--1}
 
-# base dir for config
-export BASE_DIR=${BASE_DIR:-"/verl_vision"}
-export ENTROPY_FROM_LOGITS_WITH_CHUNKING=${ENTROPY_FROM_LOGITS_WITH_CHUNKING:-False}
+# ============================================================
+# Reward
+# ============================================================
+export ACC_SCALE_RANGE=${ACC_SCALE_RANGE:-"[0,1]"}
+export FORMAT_SCALE_RANGE=${FORMAT_SCALE_RANGE:-"[0,0]"}
+export TOOL_INTRINSIC_SCALE_RANGE=${TOOL_INTRINSIC_SCALE_RANGE:-"[-0.0,0.0]"}
+export TOOL_CONSISTENCY_SCALE_RANGE=${TOOL_CONSISTENCY_SCALE_RANGE:-"[-0.0,0.0]"}
+export REMOTE_REWARD_JOB_ID=${REMOTE_REWARD_JOB_ID:-"j-xxxxxxxx"}
+export WANDB_API_KEY=${WANDB_API_KEY:-"your-wandb-key"}
 
+# ============================================================
 # Tool
-export ENABLE_MULTI_TURN=${ENABLE_MULTI_TURN:-False}
-export MAX_ASSISTANT_TURNS=${MAX_ASSISTANT_TURNS:-1}
-export MAX_USER_TURNS=${MAX_USER_TURNS:-1}
+# ============================================================
+export ENABLE_MULTI_TURN=${ENABLE_MULTI_TURN:-True}
+export MAX_ASSISTANT_TURNS=${MAX_ASSISTANT_TURNS:-5}
+export MAX_USER_TURNS=${MAX_USER_TURNS:-5}
 export MAX_PARALLEL_CALLS=${MAX_PARALLEL_CALLS:-1}
 export MAX_TOOL_RESPONSE_LENGTH=${MAX_TOOL_RESPONSE_LENGTH:-1280}
-
-# misc
-export USE_SHM=${USE_SHM:-False}
-export FUSED_KERNEL_BACKEND=${FUSED_KERNEL_BACKEND:-"triton"}
-export ROLLOUT_BACKEND=${ROLLOUT_BACKEND:-"vllm"}
+export TOOL_CONFIG_PATH=${TOOL_CONFIG_PATH:-"recipe/med/config/tool_config/image_crop_and_zoom_in_tool.yaml"}
 
 if [[ "$ACTOR_LOAD_PATH" == *"Qwen3-VL"* ]]; then
   export IMAGE_PATCH_SIZE=${IMAGE_PATCH_SIZE:-16}
@@ -70,29 +127,35 @@ else
   export IMAGE_PATCH_SIZE=${IMAGE_PATCH_SIZE:-14}
 fi
 
-export ENABLE_MULTIMODAL_MASK=${ENABLE_MULTIMODAL_MASK:-False}
-export TOKENIZATION_SANITY_CHECK_MODE=${TOKENIZATION_SANITY_CHECK_MODE:-"disable"}
-
-export ACC_SCALE_RANGE=${ACC_SCALE_RANGE:-"[0, 1.0]"}
-export FORMAT_SCALE_RANGE=${FORMAT_SCALE_RANGE:-"[0, 1.0]"}
-export TOOL_INTRINSIC_SCALE_RANGE=${TOOL_INTRINSIC_SCALE_RANGE:-"[0, 1.0]"}
-export TOOL_CONSISTENCY_SCALE_RANGE=${TOOL_CONSISTENCY_SCALE_RANGE:-"[0, 1.0]"}
-
-export FILTER_OVERLONG_MASK=${FILTER_OVERLONG_MASK:-False}
-
-
 if [[ "$ACTOR_LOAD_PATH" == *"GLM"* ]]; then
   export TOOL_FORMAT="glm4"
 else
   export TOOL_FORMAT="hermes"
 fi
+echo "TOOL_FORMAT: $TOOL_FORMAT"
 
-echo $TOOL_FORMAT
+# ============================================================
+# Training management
+# ============================================================
+export TRAIN_PROJECT_NAME=${TRAIN_PROJECT_NAME:-"Med"}
+export EXP_NAME=${EXP_NAME:-"your-exp-name"}
+export TRAIN_SAVE_PATH=${TRAIN_SAVE_PATH:-"your-save-dir"}
+export TRAIN_SAVE_FREQ=${TRAIN_SAVE_FREQ:-10}
+export TRAIN_TEST_FREQ=${TRAIN_TEST_FREQ:-10}
+export TRAIN_TOTAL_EPOCHS=${TRAIN_TOTAL_EPOCHS:-1}
+
+# ============================================================
+# Misc
+# ============================================================
+export USE_SHM=${USE_SHM:-False}
+export ENABLE_MULTIMODAL_MASK=${ENABLE_MULTIMODAL_MASK:-False}
+export TOKENIZATION_SANITY_CHECK_MODE=${TOKENIZATION_SANITY_CHECK_MODE:-"disable"}
+export FILTER_OVERLONG_MASK=${FILTER_OVERLONG_MASK:-False}
 
 
 python3 -m verl.trainer.main_ppo \
-  --config-path="${BASE_DIR}"/recipe/o3/config \
-  --config-name="o3" \
+  --config-path="${BASE_DIR}"/recipe/med/config \
+  --config-name="vision_tool_use_rl" \
   do_eval="$DO_EVAL" \
   data.train_files="$DATA_TRAIN_FILE" \
   data.val_files="$DATA_VAL_FILE" \
@@ -190,4 +253,5 @@ python3 -m verl.trainer.main_ppo \
   reward_model.reward_kwargs.acc_scale_range="$ACC_SCALE_RANGE" \
   reward_model.reward_kwargs.format_scale_range="$FORMAT_SCALE_RANGE" \
   reward_model.reward_kwargs.tool_intrinsic_scale_range="$TOOL_INTRINSIC_SCALE_RANGE" \
-  reward_model.reward_kwargs.tool_consistency_scale_range="$TOOL_CONSISTENCY_SCALE_RANGE"
+  reward_model.reward_kwargs.tool_consistency_scale_range="$TOOL_CONSISTENCY_SCALE_RANGE" \
+  +reward_model.reward_kwargs.remote_reward_job_id="$REMOTE_REWARD_JOB_ID"

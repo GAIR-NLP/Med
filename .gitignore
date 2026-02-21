@@ -1,6 +1,9 @@
 # Migration and tests (project-specific)
+.reward_server/
 .claude/
 evals/
+reward_server/
+outputs/
 CLAUDE.md
 
 # Python
