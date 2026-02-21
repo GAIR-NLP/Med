@@ -89,6 +89,9 @@ hf download Med2026/Med_training_data --repo-type dataset --local-dir data/Med_t
 
 ### Ray Cluster Setup
 
+<details>
+<summary>Click to expand</summary>
+
 For distributed training, set up a Ray cluster. Here is an example for a 2-node cluster, each with 8 GPUs.
 
 **Start the Head Node:** Run this command on your designated head node. The dashboard will be accessible at `http://<head_node_ip>:8265`.
@@ -107,7 +110,12 @@ ray start --address=xxxxxx:6379
 
 **Verify Cluster Status:** On the head node, run `ray status` to confirm that all nodes have joined and all GPUs (16 in this example) are detected.
 
+</details>
+
 ### Reward Server
+
+<details>
+<summary>Click to expand</summary>
 
 The reward server is a remote FastAPI service used to calculate reward values during training.
 
@@ -124,7 +132,12 @@ Upon successful launch, a file named with a unique `JOB_ID` will be created in t
 
 > **Note:** Take note of this `JOB_ID`, as it is required for configuring `REMOTE_REWARD_JOB_ID` in the training script.
 
+</details>
+
 ### Launch Training
+
+<details>
+<summary>Click to expand</summary>
 
 For a comprehensive list of all configurable parameters and hyperparameters, please refer to `recipe/med/scripts/train.sh`. Before running experiments, configure the following environment variables to match your setup.
 
@@ -183,9 +196,14 @@ This script will:
 2. Start the vision tool server (`recipe/med/scripts/serve_vision_tool.sh`)
 3. Launch the training pipeline (`recipe/med/scripts/train.sh`)
 
+</details>
+
 ## Reproducing Paper Figures
 
 ### Step 1: Download Evaluation Logs
+
+<details>
+<summary>Click to expand</summary>
 
 Download the evaluation logs from HuggingFace:
 
@@ -206,7 +224,12 @@ This downloads evaluation results for 6 perception benchmarks across 21 training
 - VisualProb (medium)
 - VisualProb (hard)
 
+</details>
+
 ### Step 2: Generate CSV Data
+
+<details>
+<summary>Click to expand</summary>
 
 Extract metrics from evaluation logs:
 
@@ -216,7 +239,12 @@ bash scripts/run_create_csv.sh
 
 This creates CSV files in each eval logs with performance metrics, 4-term decomposition, and factor analysis across all checkpoints.
 
+</details>
+
 ### Step 3: Generate Paper Figures
+
+<details>
+<summary>Click to expand</summary>
 
 Generate all figures using the plotting script:
 
@@ -236,11 +264,16 @@ This generates two types of figures in the `figures/` directory:
 - `{exp_name}_per_bench_exp{N}_explain.pdf` - EXPLAIN for each benchmark
 - `{exp_name}_per_bench_exp{N}_diagnose.pdf` - DIAGNOSE for each benchmark
 
+</details>
+
 ## Understanding the Results
 
 The MED framework provides three levels of analysis, each visualized in separate figures:
 
 ### MEASURE: Quantifying Drift Components
+
+<details>
+<summary>Click to expand</summary>
 
 <p align="center">
   <img src="assets/measure.png" width="100%" alt="Measure">
@@ -258,7 +291,12 @@ The MEASURE figure decomposes tool-available drift f<sub>w</sub>(t) into two com
 
 **Key finding**: Tool-induced effects account for only ~20-30% of total improvement. Most gains come from intrinsic capability improvements.
 
+</details>
+
 ### EXPLAIN: 4-Term Decomposition
+
+<details>
+<summary>Click to expand</summary>
 
 <p align="center">
   <img src="assets/explain.png" width="100%" alt="Explain">
@@ -278,7 +316,12 @@ The EXPLAIN figure decomposes the tool-induced performance gap G(t) = Acc<sub>w<
 
 **Key finding**: Gross Gain stagnates (Call Gain plateaus) while Gross Harm decreases consistently, indicating RL primarily reduces tool-induced harm rather than maximizing tool-based correction.
 
+</details>
+
 ### DIAGNOSE: Factor Analysis
+
+<details>
+<summary>Click to expand</summary>
 
 <p align="center">
   <img src="assets/diagnose.png" width="100%" alt="Diagnose">
@@ -297,6 +340,8 @@ The DIAGNOSE figure factorizes each of the four terms into:
 - **Limited failure correction**: Call Gain quality P(✓|call, failures) shows little improvement on current and persistent failure sets
 - **Reduced breakage**: Call Harm quality P(✗|call, successes) decreases, indicating fewer errors on already-solved instances
 - **Schema interference mitigation**: Schema Harm decreases as model becomes less sensitive to tool prompt
+
+</details>
 
 ### Bottom Line
 
