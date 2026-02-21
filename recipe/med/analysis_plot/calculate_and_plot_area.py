@@ -130,7 +130,9 @@ def load_baseline_performance(model_path: str) -> pd.DataFrame | None:
         return None
 
 
-def merge_baseline_performance(exp_df: pd.DataFrame, baseline_df: pd.DataFrame) -> pd.DataFrame:
+def merge_baseline_performance(
+    exp_df: pd.DataFrame, baseline_df: pd.DataFrame
+) -> pd.DataFrame:
     """Merge baseline performance (step=0) into experiment DataFrame.
 
     Inserts baseline performance as step=0 rows if they don't exist.
@@ -145,7 +147,9 @@ def merge_baseline_performance(exp_df: pd.DataFrame, baseline_df: pd.DataFrame) 
     exp_df = exp_df.copy()
 
     # Get minimum step in baseline (should be 0 or close to it)
-    min_baseline_step = baseline_df["step"].min() if "step" in baseline_df.columns else 0
+    min_baseline_step = (
+        baseline_df["step"].min() if "step" in baseline_df.columns else 0
+    )
 
     # Filter baseline to get only the earliest step
     baseline_step0 = baseline_df[baseline_df["step"] == min_baseline_step].copy()
@@ -230,7 +234,9 @@ def time_weighted_ema(
     return result
 
 
-def exponential_moving_average(y_values: np.ndarray, smoothing_factor: float = 0.1) -> np.ndarray:
+def exponential_moving_average(
+    y_values: np.ndarray, smoothing_factor: float = 0.1
+) -> np.ndarray:
     if len(y_values) <= 1:
         return y_values
 
@@ -264,7 +270,9 @@ def smooth_curve(
     elif method == "savgol":
         if len(y_values) < 5:
             return y_values
-        window_length = max(5, min(len(y_values) // 3, int(len(y_values) * smoothing_factor)))
+        window_length = max(
+            5, min(len(y_values) // 3, int(len(y_values) * smoothing_factor))
+        )
         if window_length % 2 == 0:
             window_length += 1
         try:
@@ -330,7 +338,9 @@ def style_axis(ax, benchmark, ylabel, legend_loc="best"):
     """Apply common styling to an axis."""
     from matplotlib.ticker import MultipleLocator
 
-    ax.set_title(f"{benchmark}", fontsize=16, fontweight="bold", color="#2C3E50", pad=20)
+    ax.set_title(
+        f"{benchmark}", fontsize=16, fontweight="bold", color="#2C3E50", pad=20
+    )
     ax.set_xlabel("Training Step", fontsize=12, color="#34495E", fontweight="medium")
     ax.set_ylabel(ylabel, fontsize=12, color="#34495E", fontweight="medium")
     ax.grid(True, alpha=0.4, linewidth=0.8, color="#BDC3C7")
@@ -474,7 +484,9 @@ def plot_experiment_curves(
 
         w_tool_col = "w_tool_score"
         wo_tool_col = "wo_tool_score"
-        ylabel = "Accuracy Change (Relative to Start)" if relative_to_start else "Accuracy"
+        ylabel = (
+            "Accuracy Change (Relative to Start)" if relative_to_start else "Accuracy"
+        )
 
         w_tool_values_stored = None
         wo_tool_values_stored = None
@@ -524,9 +536,9 @@ def plot_experiment_curves(
             )
 
             if relative_to_start:
-                w_tool_area_A = np.trapezoid(w_tool_values, steps)
+                np.trapezoid(w_tool_values, steps)
             else:
-                w_tool_area_A = np.trapezoid(w_tool_values - w_tool_values[0], steps)
+                np.trapezoid(w_tool_values - w_tool_values[0], steps)
 
         if wo_tool_col in benchmark_data.columns:
             wo_tool_values = benchmark_data[wo_tool_col].values
@@ -595,7 +607,7 @@ def plot_experiment_curves(
 
             positive_area = np.trapezoid(np.maximum(diff_values_raw, 0), steps)
             negative_area = np.trapezoid(np.minimum(diff_values_raw, 0), steps)
-            area_total = positive_area + negative_area
+            positive_area + negative_area
 
             # Calculate |B_base| - absolute change in base capability
             if relative_to_start:
@@ -616,14 +628,17 @@ def plot_experiment_curves(
 
             if show_area and relative_to_start:
                 call_rate = None
-                if "call_num" in benchmark_data.columns and "call_sum" in benchmark_data.columns:
+                if (
+                    "call_num" in benchmark_data.columns
+                    and "call_sum" in benchmark_data.columns
+                ):
                     call_num = benchmark_data["call_num"].values
                     call_sum = benchmark_data["call_sum"].values
                     w_tool_total = benchmark_data["w_tool_total"].values
                     wo_tool_total = benchmark_data["wo_tool_total"].values
                     assert np.all(w_tool_total == wo_tool_total)
                     call_rate = call_num / w_tool_total
-                    average_call_count = call_sum / (call_num + 1e-6)
+                    call_sum / (call_num + 1e-6)
 
                 if (
                     steps_dense is not None
@@ -637,7 +652,9 @@ def plot_experiment_curves(
                     num_interp_points = max(200, len(steps) * 10)
                     steps_interp = np.linspace(steps[0], steps[-1], num_interp_points)
                     w_tool_interp = np.interp(steps_interp, steps, w_tool_values_stored)
-                    wo_tool_interp = np.interp(steps_interp, steps, wo_tool_values_stored)
+                    wo_tool_interp = np.interp(
+                        steps_interp, steps, wo_tool_values_stored
+                    )
 
                 diff_interp = w_tool_interp - wo_tool_interp
 
@@ -884,7 +901,9 @@ def plot_experiment_curves(
         style_axis(ax, benchmark, ylabel, legend_loc="upper left")
 
         if benchmark in y_axis_settings:
-            ax.set_ylim(y_axis_settings[benchmark]["min"], y_axis_settings[benchmark]["max"])
+            ax.set_ylim(
+                y_axis_settings[benchmark]["min"], y_axis_settings[benchmark]["max"]
+            )
         else:
             ax.set_ylim(0, 1)
 
@@ -974,7 +993,10 @@ def plot_aggregated_curves(
             all_normalized_w_tool.append(w_tool_normalized)
             all_normalized_wo_tool.append(wo_tool_normalized)
 
-            if "call_num" in benchmark_data.columns and "w_tool_total" in benchmark_data.columns:
+            if (
+                "call_num" in benchmark_data.columns
+                and "w_tool_total" in benchmark_data.columns
+            ):
                 call_num = benchmark_data["call_num"].values
                 w_tool_total = benchmark_data["w_tool_total"].values
                 call_rate = call_num / w_tool_total
@@ -1059,7 +1081,9 @@ def plot_aggregated_curves(
             zorder=3,
         )
 
-        ax.axhline(y=0, color="gray", linestyle="--", linewidth=1.5, alpha=0.6, zorder=1)
+        ax.axhline(
+            y=0, color="gray", linestyle="--", linewidth=1.5, alpha=0.6, zorder=1
+        )
 
         # Fill area between w/o tool curve and x-axis with hatch pattern
         ax.fill_between(
@@ -1080,12 +1104,25 @@ def plot_aggregated_curves(
         positive_labeled = False
         negative_labeled = False
         for i in range(len(steps_dense) - 1):
-            x_fill = [steps_dense[i], steps_dense[i + 1], steps_dense[i + 1], steps_dense[i]]
-            y_fill = [wo_tool_dense[i], wo_tool_dense[i + 1], w_tool_dense[i + 1], w_tool_dense[i]]
+            x_fill = [
+                steps_dense[i],
+                steps_dense[i + 1],
+                steps_dense[i + 1],
+                steps_dense[i],
+            ]
+            y_fill = [
+                wo_tool_dense[i],
+                wo_tool_dense[i + 1],
+                w_tool_dense[i + 1],
+                w_tool_dense[i],
+            ]
 
             alpha = alpha_values[i]
 
-            if w_tool_dense[i] >= wo_tool_dense[i] and w_tool_dense[i + 1] >= wo_tool_dense[i + 1]:
+            if (
+                w_tool_dense[i] >= wo_tool_dense[i]
+                and w_tool_dense[i + 1] >= wo_tool_dense[i + 1]
+            ):
                 if not positive_labeled:
                     ax.fill(
                         x_fill,
@@ -1099,9 +1136,17 @@ def plot_aggregated_curves(
                     positive_labeled = True
                 else:
                     ax.fill(
-                        x_fill, y_fill, color="green", alpha=alpha, edgecolor="none", zorder=1.5
+                        x_fill,
+                        y_fill,
+                        color="green",
+                        alpha=alpha,
+                        edgecolor="none",
+                        zorder=1.5,
                     )
-            elif w_tool_dense[i] < wo_tool_dense[i] and w_tool_dense[i + 1] < wo_tool_dense[i + 1]:
+            elif (
+                w_tool_dense[i] < wo_tool_dense[i]
+                and w_tool_dense[i + 1] < wo_tool_dense[i + 1]
+            ):
                 if not negative_labeled:
                     ax.fill(
                         x_fill,
@@ -1114,13 +1159,24 @@ def plot_aggregated_curves(
                     )
                     negative_labeled = True
                 else:
-                    ax.fill(x_fill, y_fill, color="red", alpha=alpha, edgecolor="none", zorder=1.5)
+                    ax.fill(
+                        x_fill,
+                        y_fill,
+                        color="red",
+                        alpha=alpha,
+                        edgecolor="none",
+                        zorder=1.5,
+                    )
 
         # Calculate S_tool for aggregated data using RAW aggregated data
         # diff_aggregated_raw = aggregated_w_tool_raw - aggregated_wo_tool_raw
         diff_aggregated_raw = aggregated_w_tool - aggregated_wo_tool
-        positive_area_agg = np.trapezoid(np.maximum(diff_aggregated_raw, 0), common_steps)
-        negative_area_agg = np.trapezoid(np.minimum(diff_aggregated_raw, 0), common_steps)
+        positive_area_agg = np.trapezoid(
+            np.maximum(diff_aggregated_raw, 0), common_steps
+        )
+        negative_area_agg = np.trapezoid(
+            np.minimum(diff_aggregated_raw, 0), common_steps
+        )
         abs_base_area_agg = np.trapezoid(np.abs(aggregated_wo_tool_raw), common_steps)
         abs_tool_area_agg = positive_area_agg + abs(negative_area_agg)
         total_change_agg = abs_base_area_agg + abs_tool_area_agg
@@ -1145,8 +1201,12 @@ def plot_aggregated_curves(
         # Calculate proportions
         total_area_agg = abs_base_area_agg + abs_tool_area_agg
         base_frac_agg = abs_base_area_agg / total_area_agg if total_area_agg > 0 else 0
-        tool_pos_frac_agg = positive_area_agg / total_area_agg if total_area_agg > 0 else 0
-        tool_neg_frac_agg = abs(negative_area_agg) / total_area_agg if total_area_agg > 0 else 0
+        tool_pos_frac_agg = (
+            positive_area_agg / total_area_agg if total_area_agg > 0 else 0
+        )
+        tool_neg_frac_agg = (
+            abs(negative_area_agg) / total_area_agg if total_area_agg > 0 else 0
+        )
 
         # Background bar (white with black border)
         ax.add_patch(
@@ -1242,8 +1302,15 @@ def plot_aggregated_curves(
             fontweight="bold",
         )
 
-        ax.set_xlabel("Training Step", fontsize=12, color="#34495E", fontweight="medium")
-        ax.set_ylabel("Normalized Δ Performance", fontsize=12, color="#34495E", fontweight="medium")
+        ax.set_xlabel(
+            "Training Step", fontsize=12, color="#34495E", fontweight="medium"
+        )
+        ax.set_ylabel(
+            "Normalized Δ Performance",
+            fontsize=12,
+            color="#34495E",
+            fontweight="medium",
+        )
         ax.grid(True, alpha=0.4, linewidth=0.8, color="#BDC3C7")
         ax.set_axisbelow(True)
 
@@ -1252,7 +1319,12 @@ def plot_aggregated_curves(
             spine.set_color("#7F8C8D")
 
         ax.tick_params(
-            axis="both", which="major", labelsize=10, colors="#2C3E50", width=1, length=4
+            axis="both",
+            which="major",
+            labelsize=10,
+            colors="#2C3E50",
+            width=1,
+            length=4,
         )
 
         from matplotlib.ticker import MultipleLocator
@@ -1372,7 +1444,10 @@ def plot_call_metrics(
         benchmark_data = benchmark_data.sort_values("step")
         steps = benchmark_data["step"].values
 
-        if "call_num" not in benchmark_data.columns or "call_sum" not in benchmark_data.columns:
+        if (
+            "call_num" not in benchmark_data.columns
+            or "call_sum" not in benchmark_data.columns
+        ):
             continue
 
         call_num = benchmark_data["call_num"].values
@@ -1383,7 +1458,9 @@ def plot_call_metrics(
         average_call_count = call_sum / (call_num + 1e-6)
 
         if smoothing_factor > 0 or smoothing_method != "none":
-            call_rate = smooth_curve(call_rate, steps, smoothing_factor, smoothing_method)
+            call_rate = smooth_curve(
+                call_rate, steps, smoothing_factor, smoothing_method
+            )
             average_call_count = smooth_curve(
                 average_call_count, steps, smoothing_factor, smoothing_method
             )
@@ -1426,15 +1503,21 @@ def plot_call_metrics(
             zorder=2,
         )
 
-        ax2.set_ylabel("Average Call Count", fontsize=12, color="#34495E", fontweight="semibold")
+        ax2.set_ylabel(
+            "Average Call Count", fontsize=12, color="#34495E", fontweight="semibold"
+        )
         ax2.tick_params(axis="y", labelcolor=avg_count_color, width=1.2)
         ax2.spines["right"].set_edgecolor(avg_count_color)
         ax2.spines["right"].set_alpha(0.3)
         ax2.spines["right"].set_visible(True)
         ax2.spines["right"].set_linewidth(1.2)
 
-        ax.set_title(f"{benchmark}", fontsize=16, fontweight="bold", color="#2C3E50", pad=20)
-        ax.set_xlabel("Training Step", fontsize=12, color="#34495E", fontweight="medium")
+        ax.set_title(
+            f"{benchmark}", fontsize=16, fontweight="bold", color="#2C3E50", pad=20
+        )
+        ax.set_xlabel(
+            "Training Step", fontsize=12, color="#34495E", fontweight="medium"
+        )
         ax.grid(True, alpha=0.4, linewidth=0.8, color="#BDC3C7")
         ax.set_axisbelow(True)
 

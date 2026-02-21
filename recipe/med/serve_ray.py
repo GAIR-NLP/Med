@@ -98,7 +98,9 @@ async def crop_and_zoom_endpoint(
     except json.JSONDecodeError:
         raise HTTPException(status_code=400, detail="Invalid JSON format for crop_box.")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"An internal error occurred: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"An internal error occurred: {str(e)}"
+        )
 
 
 @app.post("/image_crop_and_zoom_in_tool")
@@ -138,7 +140,9 @@ async def image_crop_and_zoom_in_tool_endpoint(
     except json.JSONDecodeError:
         raise HTTPException(status_code=400, detail="Invalid JSON format for bbox_2d.")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"An internal error occurred: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"An internal error occurred: {str(e)}"
+        )
 
 
 # ==============================================================================

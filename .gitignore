@@ -9,6 +9,9 @@ reward_server/
 # Evals - ignore entire directory (download separately from HuggingFace)
 evals/
 
+# Evals - ignore entire directory (download separately from HuggingFace)
+evals/
+
 # Python
 __pycache__/
 *.py[cod]
