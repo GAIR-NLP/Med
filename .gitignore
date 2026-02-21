@@ -2,6 +2,9 @@
 tests/
 .claude/
 CLAUDE.md
+.reward_server/
+outputs/
+reward_server/
 
 # Evals - ignore entire directory (download separately from HuggingFace)
 evals/
