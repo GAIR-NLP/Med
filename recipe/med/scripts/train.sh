@@ -14,7 +14,7 @@ export VLLM_ALLREDUCE_USE_SYMM_MEM=${VLLM_ALLREDUCE_USE_SYMM_MEM:-0}
 # ============================================================
 # Distributed training
 # ============================================================
-export NUM_NODES=$(echo $VC_WORKER_HOSTS | tr ',' '\n' | wc -l)
+export NUM_NODES=${NUM_NODES:-2}
 export GPUS_PER_NODE=${GPUS_PER_NODE:-8}
 echo "NUM_NODES: $NUM_NODES"
 echo "GPUS_PER_NODE: $GPUS_PER_NODE"

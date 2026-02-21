@@ -70,9 +70,118 @@ cd Med
 uv venv
 source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 uv pip install -e .
+
+# For training environment (includes torch, transformers, flash-attn, etc.)
+uv pip install -e ".[train]"
 ```
 
 **Requirements**: Python 3.11+, [uv](https://github.com/astral-sh/uv) package manager
+
+## Training
+
+### Training Data
+
+The training dataset (~15k samples from 12 data sources) is available on HuggingFace:
+
+```bash
+hf download Med2026/Med_training_data --repo-type dataset --local-dir data/Med_training_data/
+```
+
+### Ray Cluster Setup
+
+For distributed training, set up a Ray cluster. Here is an example for a 2-node cluster, each with 8 GPUs.
+
+**Start the Head Node:** Run this command on your designated head node. The dashboard will be accessible at `http://<head_node_ip>:8265`.
+
+```bash
+ray start --head --dashboard-host=0.0.0.0
+```
+
+Note down the address provided (e.g., `xxxxxx:6379`).
+
+**Start Worker Node(s):** Run this command on each worker node, replacing `xxxxxx:6379` with the address from the head node.
+
+```bash
+ray start --address=xxxxxx:6379
+```
+
+**Verify Cluster Status:** On the head node, run `ray status` to confirm that all nodes have joined and all GPUs (16 in this example) are detected.
+
+### Reward Server
+
+The reward server is a remote FastAPI service used to calculate reward values during training.
+
+To start the reward server:
+
+```bash
+bash recipe/med/scripts/reward_server.sh
+```
+
+- `PORT`: Specifies the network port on which the reward server will listen for incoming requests.
+- `WORKERS`: Sets the number of worker processes for the server.
+
+Upon successful launch, a file named with a unique `JOB_ID` will be created in the `.reward_server/` directory. This file contains the IP address and port of the running server (e.g., `your_server_ip:8192`).
+
+> **Note:** Take note of this `JOB_ID`, as it is required for configuring `REMOTE_REWARD_JOB_ID` in the training script.
+
+### Launch Training
+
+For a comprehensive list of all configurable parameters and hyperparameters, please refer to `recipe/med/scripts/train.sh`. Before running experiments, configure the following environment variables to match your setup.
+
+**Set Base Directory and Python Path:** Point `BASE_DIR` to your cloned repository root so that all scripts can locate configs and modules correctly.
+
+```bash
+export BASE_DIR="/path/to/Med"
+export PYTHONPATH=${BASE_DIR}/:${PYTHONPATH}
+```
+
+**Set Node and GPU Counts:** Adjust these values based on your actual cluster configuration (e.g., for 2 nodes with 8 GPUs each):
+
+```bash
+export NUM_NODES=2
+export GPUS_PER_NODE=8
+```
+
+**Configure Reward Server Job ID:** Set `REMOTE_REWARD_JOB_ID` to the identifier(s) of your previously launched reward server(s). This enables the training pipeline to locate the reward server's address.
+
+```bash
+export REMOTE_REWARD_JOB_ID="j-xxxxxxxxxx"
+```
+
+**Set Training Data:**
+
+```bash
+export DATA_TRAIN_FILE="[/path/to/your/data/Med_training_data/train-00000-of-00030.parquet]"
+```
+
+**Model Loading and Checkpointing:** Configure paths for loading initial model weights and saving training states, along with the save frequency.
+
+- `ACTOR_LOAD_PATH`: Path to the initial model checkpoint to load.
+- `TRAIN_SAVE_FREQ`: Frequency to save the training state (e.g., `5` for every 5 steps, `-1` to disable saving).
+- `TRAIN_SAVE_PATH`: Directory where training checkpoints will be stored.
+
+```bash
+export ACTOR_LOAD_PATH="/path/to/Qwen2.5-VL-7B-Instruct"
+export TRAIN_SAVE_FREQ=10
+export TRAIN_SAVE_PATH="/path/to/checkpoints"
+```
+
+**Set Wandb API Key:** Required for logging training metrics to [Weights & Biases](https://wandb.ai/).
+
+```bash
+export WANDB_API_KEY="your-wandb-api-key"
+```
+
+**Start Training:** First serve the vision tool, then launch the training script. The entry point `recipe/med/scripts/run.sh` handles this sequence automatically:
+
+```bash
+bash recipe/med/scripts/run.sh
+```
+
+This script will:
+1. Verify Ray cluster status
+2. Start the vision tool server (`recipe/med/scripts/serve_vision_tool.sh`)
+3. Launch the training pipeline (`recipe/med/scripts/train.sh`)
 
 ## Reproducing Paper Figures
 
@@ -215,8 +324,8 @@ We are progressively open-sourcing components of the MED project:
 
 - [x] **Evaluation logs** - Available at [HuggingFace](https://huggingface.co/datasets/Med2026/Med-eval-logs)
 - [x] **Analysis code** - MED framework implementation (`recipe/med/analysis_plot/`)
-- [ ] **Training data** - RL training dataset (~15k samples)
-- [ ] **Training code** - GRPO-based RL training pipeline
+- [x] **Training data** - Available at [HuggingFace](https://huggingface.co/datasets/Med2026/Med_training_data)
+- [x] **Training code** - GRPO-based RL training pipeline (`recipe/med/`)
 - [ ] **Evaluation data** - Benchmark datasets (6 perception tasks)
 - [ ] **Evaluation code** - Evaluation pipeline for tool-free and tool-available protocols
 
