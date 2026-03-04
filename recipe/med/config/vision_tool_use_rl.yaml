@@ -1,0 +1,29 @@
+hydra:
+  searchpath:
+    - file:///verl_vision/verl/trainer/config
+
+defaults:
+  - ppo_trainer
+  - _self_
+
+data:
+  enforce_single_turn: False
+
+reward_model:
+
+  reward_kwargs:
+
+    acc_scale_range: [0, 1.0]
+
+    format_scale_range: [0, 1.0]
+
+    tool_consistency_scale_range: [0, 1.0]
+
+    tool_intrinsic_scale_range: [0, 1.0]
+
+trainer:
+  trajectory_data_dir: "./trajectories"
+
+  filter_overlong_mask: False
+
+do_eval: True
