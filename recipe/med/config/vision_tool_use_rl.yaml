@@ -1,6 +1,6 @@
 hydra:
   searchpath:
-    - file:///verl_vision/verl/trainer/config
+    - file://verl/trainer/config
 
 defaults:
   - ppo_trainer
