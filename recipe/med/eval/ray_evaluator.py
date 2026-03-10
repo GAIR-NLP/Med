@@ -858,7 +858,7 @@ class RayEvaluator(RayPPOTrainer):
 
         import torch
 
-        from recipe.o3.trajectory_saver import (extract_text_data,
+        from recipe.med.trajectory_saver import (extract_text_data,
                                                 save_trajectories_jsonl)
         from verl import DataProto
 
@@ -1260,7 +1260,7 @@ class RayEvaluator(RayPPOTrainer):
         data_source = result_dict.get("data_source", "")
 
         if "charxiv2rq" in data_source:
-            from recipe.o3.eval.utils.charxiv.constants import (
+            from recipe.med.eval.utils.charxiv.constants import (
                 REASONING_GRADING_INST, REASONING_GRADING_PREFIX)
 
             reasoning_q_source = int(id.split("_")[-2])
@@ -1274,7 +1274,7 @@ class RayEvaluator(RayPPOTrainer):
                 "<|response|>", response
             )
         else:
-            from recipe.o3.eval.utils.common import PROMPT_JUDGE, PROMPT_JUDGE_MODERATE
+            from recipe.med.eval.utils.common import PROMPT_JUDGE
             
             # Use general verification prompt for other benchmarks
             verification_prompt = PROMPT_JUDGE.format(
@@ -1283,6 +1283,12 @@ class RayEvaluator(RayPPOTrainer):
                 response=response
             )
 
+
+        verification_prompt = self.tokenizer.apply_chat_template(
+            [{"role": "user", "content": verification_prompt}],
+            tokenize=False,
+            add_generation_prompt=True
+        )
         return verification_prompt
 
     def _get_llm_judgment(self, prompt: str) -> str:

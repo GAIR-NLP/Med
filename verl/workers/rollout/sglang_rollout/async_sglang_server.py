@@ -296,18 +296,6 @@ class SGLangHttpServer:
             self.config.response_length, self.config.max_model_len - len(prompt_ids) - 1
         )
         sampling_params["max_new_tokens"] = max_new_tokens
-        processor = self.model_config.processor
-        if processor is not None:
-            if (
-                "Glm46VImageProcessor" in processor.image_processor.__class__.__name__
-                or "Glm4vImageProcessor" in processor.image_processor.__class__.__name__
-            ):
-                tool_call_id_1 = 151352
-                tool_call_id_2 = 151353
-            else:
-                tool_call_id_1 = 151657
-                tool_call_id_2 = 151658
-        sampling_params["logit_bias"] = {tool_call_id_1: -10000.0, tool_call_id_2: -10000.0}
         return_logprob = sampling_params.pop("logprobs", False)
 
         prompt_ids = _glm46v_dedup_image_tokens(prompt_ids, self.model_config.processor)

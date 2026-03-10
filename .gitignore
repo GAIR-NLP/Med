@@ -4,6 +4,7 @@ tests/
 CLAUDE.md
 .reward_server/
 outputs/
+uv.lock
 
 # Evals - ignore entire directory (download separately from HuggingFace)
 evals/

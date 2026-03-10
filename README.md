@@ -198,6 +198,56 @@ This script will:
 
 </details>
 
+## Evaluation
+
+### Evaluation Data
+
+The evaluation dataset is available on HuggingFace:
+
+```bash
+hf download Med2026/Med_eval_data --repo-type dataset --local-dir data/Med_eval_data/
+```
+
+### Launch Evaluation
+
+<details>
+<summary>Click to expand</summary>
+
+For the full list of evaluation parameters, please refer to `recipe/med/scripts/eval.sh`.
+
+Evaluation shares the same infrastructure setup as training:
+- Reuse the **Ray cluster** setup from the Training section
+- Reuse the same **reward server** and `REMOTE_REWARD_JOB_ID`
+- Reuse the common environment setup for `BASE_DIR`, `PYTHONPATH`
+- set your `NUM_NODES` and `GPUS_PER_NODE`
+
+**Set Model and Output Paths:** Specify the trained checkpoint to evaluate, the verifier model path, and the output directory for evaluation results.
+
+```bash
+export ACTOR_LOAD_PATH="/path/to/your/checkpoint"
+export VERIFICATION_LOAD_PATH="/path/to/your/verification_llm/checkpoint"
+export OUTPUT_DIR="/path/to/evaluation_results"
+export EXP_NAME="your_eval_name"
+```
+
+**Set Evaluation Data:** `DATA_VAL_FILE` accepts one or more parquet files. In the example below, `tool_agent` denotes tool-available evaluation and `single_turn` denotes tool-free evaluation.
+
+```bash
+export DATA_VAL_FILE="[/path/to/Med_eval_data/vstar_bench_tool_agent_format_0.0_length_0.0_maxlen_10564_num_191.parquet,/path/to/Med_eval_data/vstar_bench_single_turn_format_0.0_length_0.0_maxlen_10564_num_191.parquet]"
+```
+
+**Start Evaluation:** First serve the vision tool, then run the evaluation script.
+
+```bash
+bash recipe/med/scripts/serve_vision_tool.sh
+
+bash recipe/med/scripts/eval.sh
+```
+
+The evaluation outputs will be written to `OUTPUT_DIR` (default: `./evaluation_results`).
+
+</details>
+
 ## Reproducing Paper Figures
 
 ### Step 1: Download Evaluation Logs
@@ -371,8 +421,8 @@ We are progressively open-sourcing components of the MED project:
 - [x] **Analysis code** - MED framework implementation (`recipe/med/analysis_plot/`)
 - [x] **Training data** - Available at [HuggingFace](https://huggingface.co/datasets/Med2026/Med_training_data)
 - [x] **Training code** - GRPO-based RL training pipeline (`recipe/med/`)
-- [ ] **Evaluation data** - Benchmark datasets (6 perception tasks)
-- [ ] **Evaluation code** - Evaluation pipeline for tool-free and tool-available protocols
+- [x] **Evaluation data** - Available at [HuggingFace](https://huggingface.co/datasets/Med2026/Med_eval_data)
+- [x] **Evaluation code** - Evaluation pipeline for tool-free and tool-available protocols (`recipe/med/eval/`, `recipe/med/scripts/eval.sh`)
 
 Stay tuned for updates!
 

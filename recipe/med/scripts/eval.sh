@@ -2,41 +2,84 @@
 
 set -x
 
+# ============================================================
+# Data
+# ============================================================
+export DATA_VAL_FILE=${DATA_VAL_FILE:-"[your-val-data-files]"}
+export DATA_MAX_PROMPT_LENGTH=${DATA_MAX_PROMPT_LENGTH:-16000}
+export DATA_MAX_RES_LENGTH=${DATA_MAX_RES_LENGTH:-8192}
+export DATA_VAL_BATCH_SIZE=${DATA_VAL_BATCH_SIZE:-4096}
+export ENFORCE_SINGLE_TURN=${ENFORCE_SINGLE_TURN:-False}
+export RETURN_RAW_CHAT=${RETURN_RAW_CHAT:-True}
+export RETURN_MULTI_MODAL_INPUTS=${RETURN_MULTI_MODAL_INPUTS:-True}
+
+# ============================================================
+# Rollout
+# ============================================================
+export ROLLOUT_BACKEND=${ROLLOUT_BACKEND:-"sglang"}
+export ROLLOUT_MODE=${ROLLOUT_MODE:-"async"}
+export ROLLOUT_TP_SIZE=${ROLLOUT_TP_SIZE:-1}
+export ROLLOUT_MAX_GPU_MEM=${ROLLOUT_MAX_GPU_MEM:-"0.8"}
+export ROLLOUT_CHUNKED_PREFILL=${ROLLOUT_CHUNKED_PREFILL:-False}
+export ROLLOUT_ENFORCE_EAGER=${ROLLOUT_ENFORCE_EAGER:-False}
+export ROLLOUT_MAX_NUM_BATCHED_TOKENS=${ROLLOUT_MAX_NUM_BATCHED_TOKENS:-8192}
+
+# ============================================================
+# Reward
+# ============================================================
+export ACC_SCALE_RANGE=${ACC_SCALE_RANGE:-"[0,1]"}
+export FORMAT_SCALE_RANGE=${FORMAT_SCALE_RANGE:-"[0,0]"}
+export TOOL_INTRINSIC_SCALE_RANGE=${TOOL_INTRINSIC_SCALE_RANGE:-"[-0.0,0.0]"}
+export TOOL_CONSISTENCY_SCALE_RANGE=${TOOL_CONSISTENCY_SCALE_RANGE:-"[-0.0,0.0]"}
+export REMOTE_REWARD_JOB_ID=${REMOTE_REWARD_JOB_ID:-"j-xxxxxxxx"}
+
+# ============================================================
+# Tool
+# ============================================================
+export ENABLE_MULTI_TURN=${ENABLE_MULTI_TURN:-True}
+export MAX_ASSISTANT_TURNS=${MAX_ASSISTANT_TURNS:-5}
+export MAX_USER_TURNS=${MAX_USER_TURNS:-5}
+export MAX_PARALLEL_CALLS=${MAX_PARALLEL_CALLS:-1}
+export MAX_TOOL_RESPONSE_LENGTH=${MAX_TOOL_RESPONSE_LENGTH:-1280}
+export TOOL_CONFIG_PATH=${TOOL_CONFIG_PATH:-"recipe/med/config/tool_config/image_crop_and_zoom_in_tool.yaml"}
+
+if [[ "$ACTOR_LOAD_PATH" == *"Qwen3-VL"* ]]; then
+  export IMAGE_PATCH_SIZE=${IMAGE_PATCH_SIZE:-16}
+else
+  export IMAGE_PATCH_SIZE=${IMAGE_PATCH_SIZE:-14}
+fi
+
+if [[ "$ACTOR_LOAD_PATH" == *"GLM"* ]]; then
+  export TOOL_FORMAT="glm4"
+else
+  export TOOL_FORMAT="hermes"
+fi
+echo "TOOL_FORMAT: $TOOL_FORMAT"
+
+
 export BASE_DIR=${BASE_DIR:-"your-code-dir"}
 export OUTPUT_DIR=${OUTPUT_DIR:-"./evaluation_results"}
 
-export REMOTE_REWARD_JOB_ID=${REMOTE_REWARD_JOB_ID:-"j-xxxxxxxx"}
 
 export NUM_NODES=${NUM_NODES:-1}
 export GPUS_PER_NODE=${GPUS_PER_NODE:-8}
 
-export USE_SHM=${USE_SHM:-True}
+export USE_SHM=${USE_SHM:-False}
 
 export DATALOADER_NUM_WORKERS=${DATALOADER_NUM_WORKERS:-16}
 
 export ACTOR_LOAD_PATH=${ACTOR_LOAD_PATH:-"your-ckpt-path/Qwen2.5-VL-7B-Instruct"}
 
-export DATA_VAL_FILE=${DATA_VAL_FILE:-"[your-eval-data-files]"}
 export VAL_MAX_SAMPLES=${VAL_MAX_SAMPLES:--1}
-
-export ROLLOUT_MAX_NUM_BATCHED_TOKENS=${ROLLOUT_MAX_NUM_BATCHED_TOKENS:-8192}
 
 export ENABLE_MULTI_TURN=${ENABLE_MULTI_TURN:-False}
 export MAX_ASSISTANT_TURNS=${MAX_ASSISTANT_TURNS:-1}
 export MAX_USER_TURNS=${MAX_USER_TURNS:-1}
 export MAX_PARALLEL_CALLS=${MAX_PARALLEL_CALLS:-1}
 
-export DATA_MAX_PROMPT_LENGTH=${DATA_MAX_PROMPT_LENGTH:-12800}
-export DATA_MAX_RES_LENGTH=${DATA_MAX_RES_LENGTH:-8192}
-
-export ROLLOUT_MODE=${ROLLOUT_MODE:-"async"}
 export MAX_TOOL_RESPONSE_LENGTH=${MAX_TOOL_RESPONSE_LENGTH:-1280}
 
-export RETURN_RAW_CHAT=${RETURN_RAW_CHAT:-False}
-
 export EVAL_PROJECT_NAME=${EVAL_PROJECT_NAME:-"Eval"}
-
-export ROLLOUT_MAX_GPU_MEM=${ROLLOUT_MAX_GPU_MEM:-0.85}
 
 export PASSK=${PASSK:-1}
 
@@ -48,12 +91,8 @@ export VERIFICATION_MAX_TOKENS=${VERIFICATION_MAX_TOKENS:-1024}
 
 export ACC_SCALE_RANGE=${ACC_SCALE_RANGE:-"[0, 1.0]"}
 export FORMAT_SCALE_RANGE=${FORMAT_SCALE_RANGE:-"[0, 0.0]"}
-export TOOL_INTRINSIC_SCALE_RANGE=${TOOL_INTRINSIC_SCALE_RANGE:-"[0, 0.0]"}
-export TOOL_CONSISTENCY_SCALE_RANGE=${TOOL_CONSISTENCY_SCALE_RANGE:-"[0, 0.0]"}
 export USE_RAY_ACTOR=${USE_RAY_ACTOR:-"True"}
-export ROLLOUT_BACKEND=${ROLLOUT_BACKEND:-"sglang"}
 export ROLLOUT_ENFORCE_EAGER=${ROLLOUT_ENFORCE_EAGER:-"False"}
-export DATA_VAL_BATCH_SIZE=${DATA_VAL_BATCH_SIZE:-4096}
 
 export EVAL_TEMP=${EVAL_TEMP:-0.0}
 export EVAL_TOPP=${EVAL_TOPP:-1}
@@ -94,7 +133,7 @@ echo "EVAL_TOPK=${EVAL_TOPK}"
 echo "DATA_MAX_RES_LENGTH=${DATA_MAX_RES_LENGTH}"
 
 
-python3 -m recipe.med.eval.main_eval \
+python -Xfrozen_modules=off -m recipe.med.eval.main_eval \
   --config-path="${BASE_DIR}"/recipe/med/config \
   data.val_files="$DATA_VAL_FILE" \
   data.max_prompt_length="$DATA_MAX_PROMPT_LENGTH" \

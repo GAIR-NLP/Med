@@ -3,7 +3,7 @@ name = "med"
 version = "0.1.0"
 description = "MED (Measure-Explain-Diagnose) Framework for Vision Tool-Use RL Analysis"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = "==3.11.*"
 license = {text = "MIT"}
 authors = [
     {name = "MED Contributors"}
@@ -37,6 +37,7 @@ train = [
     "triton==3.5.1",
     "ninja==1.13.0",
     "cmake==4.0.3",
+    "torchdata",
 
     # Transformers and Multimodal
     "transformers==5.0.0rc0",
@@ -48,14 +49,14 @@ train = [
     "huggingface-hub==1.2.1",
 
     # High-Performance Inference (including flash-attn)
-    "flash-attn==2.8.3",
+    "flash-attn @ https://github.com/mjun0812/flash-attention-prebuild-wheels/releases/download/v0.7.16/flash_attn-2.8.3+cu128torch2.9-cp311-cp311-linux_x86_64.whl",
     "sglang==0.5.6.post1",
     "outlines==0.1.11",
     "liger-kernel==0.6.4",
     "torchao==0.9.0",
 
     # RL Framework
-    "ray==2.52.1",
+    "ray[all]",
     "gymnasium==1.1.1",
     "tensordict==0.10.0",
 
@@ -104,6 +105,12 @@ train = [
     "fastapi==0.123.2",
     "uvicorn==0.38.0",
     "pydantic",
+
+    # Patch
+    "watchfiles==1.1.1",
+    "codetiming",
+    "cachetools",
+    "debugpy",
 ]
 
 # Development tools
@@ -168,5 +175,11 @@ python_functions = ["test_*"]
 
 [tool.uv]
 # Configure build dependencies for packages that need to build against torch
-[tool.uv.extra-build-dependencies]
-flash-attn = ["torch==2.9.1", "ninja==1.13.0", "packaging"]
+# [tool.uv.extra-build-dependencies]
+# flash-attn = ["torch==2.9.1", "ninja==1.13.0", "packaging"]
+override-dependencies = [
+    "nvidia-cudnn-cu12==9.16.0.29"
+]
+
+[tool.hatch.metadata]
+allow-direct-references = true

@@ -726,16 +726,6 @@ class RayPPOTrainer:
         )
         assert self.tokenizer is not None
         trajectory_data_dir = self.config.trainer.get("trajectory_data_dir", None)
-        # if self.config.actor_rollout_ref.rollout.multi_turn.enable and trajectory_data_dir:
-        #     from recipe.o3.trajectory_saver import convert_batch_to_trajectory
-        #     convert_batch_to_trajectory(
-        #         test_batch,
-        #         sample_result_dicts,
-        #         self.tokenizer,
-        #         trajectory_data_dir,
-        #         f"{self.config.trainer.experiment_name}_val_{self.timestamp}",
-        #         self.global_steps
-        #     )
 
         end_time = time.time()
         print(
@@ -1463,19 +1453,6 @@ class RayPPOTrainer:
                         and self.config.trainer.test_freq > 0
                         and (is_last_step or self.global_steps % self.config.trainer.test_freq == 0)
                     ):
-                        # assert self.tokenizer is not None
-                        # trajectory_data_dir = self.config.trainer.get("trajectory_data_dir", None)
-                        # if self.config.actor_rollout_ref.rollout.multi_turn.enable and trajectory_data_dir:
-                        #     from recipe.o3.trajectory_saver import convert_batch_to_trajectory
-                        #     convert_batch_to_trajectory(
-                        #         batch,
-                        #         result_dicts,
-                        #         self.tokenizer,
-                        #         trajectory_data_dir,
-                        #         f"{self.config.trainer.experiment_name}_train_{self.timestamp}",
-                        #         self.global_steps
-                        #     )
-
                         with marked_timer("testing", timing_raw, color="green"):
                             val_metrics: dict = self._validate()
                             if is_last_step:

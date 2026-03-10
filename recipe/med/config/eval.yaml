@@ -1,0 +1,63 @@
+hydra:
+  searchpath:
+    - file://verl/trainer/config
+
+defaults:
+
+  - ppo_trainer
+
+  - _self_
+
+# Output directory for evaluation results
+output_dir: null
+
+actor_rollout_ref:
+
+  rollout:
+
+    repetition_penalty: 1.1
+
+data:
+
+  custom_cls:
+
+    path: file://recipe/med/eval/eval_dataset.py
+
+    name: EvalDataset
+
+  dataloader_num_workers: 0
+
+reward_model:
+
+  reward_kwargs:
+
+    acc_scale_range: [0, 1.0]
+
+    format_scale_range: [0, 0.0]
+
+    tool_consistency_scale_range: [0, 0.0]
+
+    tool_intrinsic_scale_range: [0, 0.0]
+
+# LLM verification configuration
+llm_verification:
+
+  enabled: auto  # Options: true, false, auto (auto enables for charxiv datasets)
+
+  verifier_model:
+
+    path: ""  # Path to LLM model for verification
+
+    backend: "sglang"  # Options: "vllm", "sglang"
+
+    tensor_parallel_size: 1  # TP size for 32B model
+
+    gpu_memory_utilization: 0.8
+
+    max_model_len: 32768
+
+    dtype: "bfloat16"
+
+    max_tokens: 1024
+
+    use_ray_actor: True
